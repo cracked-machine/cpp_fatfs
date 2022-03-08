@@ -20,33 +20,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <fatfs.hpp>
+#include <diskio.hpp>
 
 
 namespace fatfs {
 
-    DSTATUS Driver::disk_initialize(BYTE pdrv [[maybe_unused]]) 
-    {
-        DSTATUS res = 0;
-        return res;
-    }
-    DSTATUS Driver::disk_status(BYTE pdrv [[maybe_unused]]) 
-    {
-        DSTATUS res = 0;
-        return res;
-    }
-    DRESULT Driver::disk_read(BYTE pdrv [[maybe_unused]], BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
-    {
-        return DRESULT::RES_OK;
-    }
-    DRESULT Driver::disk_write(BYTE pdrv [[maybe_unused]], const BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
-    {
-        return DRESULT::RES_OK;
-    }
-    DRESULT Driver::disk_ioctl (BYTE pdrv [[maybe_unused]], BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]])
-    {
-        return DRESULT::RES_OK;
-    }
+Diskio::DSTATUS Diskio::disk_initialize(BYTE pdrv [[maybe_unused]]) 
+{
+    DSTATUS res = 0;
+    return res;
+}
+
+Diskio::DSTATUS Diskio::disk_status(BYTE pdrv [[maybe_unused]]) 
+{
+    DSTATUS res = 0;
+    return res;
+}
+
+Diskio::DRESULT Diskio::disk_read(BYTE pdrv [[maybe_unused]], BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
+{
+    return DRESULT::RES_OK;
+}
+
+Diskio::DRESULT Diskio::disk_write(BYTE pdrv [[maybe_unused]], const BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
+{
+    return DRESULT::RES_OK;
+}
+
+Diskio::DRESULT Diskio::disk_ioctl (BYTE pdrv [[maybe_unused]], BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]])
+{
+    return DRESULT::RES_OK;
+}
 
 
 } // namespace fatfs

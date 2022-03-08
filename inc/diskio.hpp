@@ -20,30 +20,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef __FATFS_HPP__
-#define __FATFS_HPP__
+#ifndef __DISKIO_HPP__
+#define __DISKIO_HPP__
 
-#include <ff.hpp>
+// #include <ff.hpp>
+#include <ff_types.hpp>	
 namespace fatfs {
 
-
-/* Results of Disk Functions */
-enum DRESULT {
-	RES_OK = 0,		/* 0: Successful */
-	RES_ERROR,		/* 1: R/W Error */
-	RES_WRPRT,		/* 2: Write Protected */
-	RES_NOTRDY,		/* 3: Not Ready */
-	RES_PARERR		/* 4: Invalid Parameter */
-};
-
-
-
-
-using DSTATUS = BYTE;
-
-class Driver {
+class Diskio {
 
 public:
+
+    Diskio() = default;
+
+    using DSTATUS = BYTE;
+
+    /* Results of Disk Functions */
+    enum DRESULT {
+        RES_OK = 0,		/* 0: Successful */
+        RES_ERROR,		/* 1: R/W Error */
+        RES_WRPRT,		/* 2: Write Protected */
+        RES_NOTRDY,		/* 3: Not Ready */
+        RES_PARERR		/* 4: Invalid Parameter */
+    };
 
     static const BYTE STA_NOINIT        = 0x01;	/* Drive not initialized */
     static const BYTE STA_NODISK	    = 0x02;	/* No medium in the drive */
@@ -73,6 +72,7 @@ public:
     static const BYTE ATA_GET_REV		= 20;	/* Get F/W revision */
     static const BYTE ATA_GET_MODEL		= 21;	/* Get model name */
     static const BYTE ATA_GET_SN		= 22;	/* Get serial number */
+    
     static DSTATUS disk_initialize(BYTE pdrv);
     static DSTATUS disk_status(BYTE pdrv);
     static DRESULT disk_read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count);
@@ -82,4 +82,4 @@ public:
 
 } // namespace fatfs
 
-#endif // __FATFS_HPP__
+#endif // __DISKIO_HPP__
