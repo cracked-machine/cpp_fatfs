@@ -1,13 +1,11 @@
-# build as static lib
-add_library(FF14b STATIC "")
-target_sources(FF14b PRIVATE
+target_sources(${BUILD_NAME} PRIVATE
     src/ff.cpp
     src/ffsystem.cpp
     src/ffunicode.cpp
     src/diskio.cpp
 )
 
-target_include_directories(FF14b PRIVATE 
+target_include_directories(${BUILD_NAME} PRIVATE 
     inc
 )
 
