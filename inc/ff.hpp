@@ -40,20 +40,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#ifndef __FF_HPP__
+#define __FF_HPP__
+
+#include <diskio_base.hpp>
+#include <memory>
+
 #ifndef FF_DEFINED
 #define FF_DEFINED	86631	/* Revision ID */
 
 
-#include <diskio.hpp>
-#include <stdarg.h>
-
 namespace fatfs {
 
-class ff {
+class Driver {
 
 public:
 
-	ff() = default; 
+	Driver(DiskioBase &diskio); 
+
 	static constexpr uint8_t SZDIRE			  =	32;		/* Size of a directory entry */
 
 	FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode);				/* Open or create a file */
@@ -128,7 +132,7 @@ public:
 
 private:
 
-	Diskio diskio;
+	std::unique_ptr<DiskioBase> m_diskio;
 
 	/* Limits and boundaries */
 	static constexpr uint32_t MAX_DIR 		= 0x200000;			/* Max size of FAT directory */
@@ -1008,3 +1012,4 @@ private:
 
 #endif /* FF_DEFINED */
 
+#endif // __FF_HPP__

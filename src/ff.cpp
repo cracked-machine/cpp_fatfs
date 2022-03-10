@@ -40,12 +40,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <string.h>
+
 #include <ff.hpp>			/* Declarations of FatFs API */
-		/* Declarations of device I/O functions */
+
 #include <cmath>			// needs to be outside of namespace
 #include <cctype>
-
+#include <cstring>
 /*--------------------------------------------------------------------------
 
    Module Private Definitions
@@ -55,7 +55,7 @@
 namespace fatfs {
 
 #if FF_DEFINED != 86631	/* Revision ID */
-#error Wrong include file (ff.h).
+#error Wrong include file (Driver.h).
 #endif
 
 
@@ -137,7 +137,7 @@ static const BYTE GUID_MS_Basic[16] = {0xA2,0xA0,0xD0,0xEB,0xE5,0xB9,0x33,0x44,0
 #error Wrong setting of FF_LFN_UNICODE
 #endif
 static const BYTE LfnOfs[] = {1,3,5,7,9,14,16,18,20,22,24,28,30};	/* FAT: Offset of LFN characters in the directory entry */
-#define MAXDIRB(nc)	((nc + 44U) / 15 * ff::SZDIRE)	/* exFAT: Size of directory entry block scratchpad buffer needed for the name length */
+#define MAXDIRB(nc)	((nc + 44U) / 15 * Driver::SZDIRE)	/* exFAT: Size of directory entry block scratchpad buffer needed for the name length */
 
 #if FF_USE_LFN == 1		/* LFN enabled with static working buffer */
 #if FF_FS_EXFAT
@@ -223,7 +223,11 @@ static const BYTE DbcTbl[] = MKCVTBL(TBL_DC, FF_CODE_PAGE);
 
 #endif
 
-
+Driver::Driver(DiskioBase &diskio) 
+: m_diskio(&diskio) // initialize m_diskio (std::unique_ptr) with pointer to diskio arg
+{
+	// do nothing
+}
 
 
 /*--------------------------------------------------------------------------
@@ -237,7 +241,7 @@ static const BYTE DbcTbl[] = MKCVTBL(TBL_DC, FF_CODE_PAGE);
 /* Load/Store multi-byte word in the FAT structure                       */
 /*-----------------------------------------------------------------------*/
 
-WORD ff::ld_word (const BYTE* ptr)	/*	 Load a 2-byte little-endian word */
+WORD Driver::ld_word (const BYTE* ptr)	/*	 Load a 2-byte little-endian word */
 {
 	WORD rv;
 
@@ -246,7 +250,7 @@ WORD ff::ld_word (const BYTE* ptr)	/*	 Load a 2-byte little-endian word */
 	return rv;
 }
 
-DWORD ff::ld_dword (const BYTE* ptr)	/* Load a 4-byte little-endian word */
+DWORD Driver::ld_dword (const BYTE* ptr)	/* Load a 4-byte little-endian word */
 {
 	DWORD rv;
 
@@ -258,7 +262,7 @@ DWORD ff::ld_dword (const BYTE* ptr)	/* Load a 4-byte little-endian word */
 }
 
 #if FF_FS_EXFAT
-QWORD ff::ld_qword (const BYTE* ptr)	/* Load an 8-byte little-endian word */
+QWORD Driver::ld_qword (const BYTE* ptr)	/* Load an 8-byte little-endian word */
 {
 	QWORD rv;
 
@@ -275,13 +279,13 @@ QWORD ff::ld_qword (const BYTE* ptr)	/* Load an 8-byte little-endian word */
 #endif
 
 #if !FF_FS_READONLY
-void ff::st_word (BYTE* ptr, WORD val)	/* Store a 2-byte word in little-endian */
+void Driver::st_word (BYTE* ptr, WORD val)	/* Store a 2-byte word in little-endian */
 {
 	*ptr++ = (BYTE)val; val >>= 8;
 	*ptr++ = (BYTE)val;
 }
 
-void ff::st_dword (BYTE* ptr, DWORD val)	/* Store a 4-byte word in little-endian */
+void Driver::st_dword (BYTE* ptr, DWORD val)	/* Store a 4-byte word in little-endian */
 {
 	*ptr++ = (BYTE)val; val >>= 8;
 	*ptr++ = (BYTE)val; val >>= 8;
@@ -290,7 +294,7 @@ void ff::st_dword (BYTE* ptr, DWORD val)	/* Store a 4-byte word in little-endian
 }
 
 #if FF_FS_EXFAT
-void ff::st_qword (BYTE* ptr, QWORD val)	/* Store an 8-byte word in little-endian */
+void Driver::st_qword (BYTE* ptr, QWORD val)	/* Store an 8-byte word in little-endian */
 {
 	*ptr++ = (BYTE)val; val >>= 8;
 	*ptr++ = (BYTE)val; val >>= 8;
@@ -311,7 +315,7 @@ void ff::st_qword (BYTE* ptr, QWORD val)	/* Store an 8-byte word in little-endia
 /*-----------------------------------------------------------------------*/
 
 /* Test if the byte is DBC 1st byte */
-int ff::dbc_1st (BYTE c)
+int Driver::dbc_1st (BYTE c)
 {
 #if FF_CODE_PAGE == 0		/* Variable code page */
 	if (DbcTbl && c >= DbcTbl[0]) {
@@ -331,7 +335,7 @@ int ff::dbc_1st (BYTE c)
 
 
 /* Test if the byte is DBC 2nd byte */
-int ff::dbc_2nd (BYTE c)
+int Driver::dbc_2nd (BYTE c)
 {
 #if FF_CODE_PAGE == 0		/* Variable code page */
 	if (DbcTbl && c >= DbcTbl[4]) {
@@ -355,7 +359,7 @@ int ff::dbc_2nd (BYTE c)
 #if FF_USE_LFN
 
 /* Get a Unicode code point from the TCHAR string in defined API encodeing */
-DWORD ff::tchar2uni (	/* Returns a character in UTF-16 encoding (>=0x10000 on surrogate pair, 0xFFFFFFFF on decode error) */
+DWORD Driver::tchar2uni (	/* Returns a character in UTF-16 encoding (>=0x10000 on surrogate pair, 0xFFFFFFFF on decode error) */
 	const TCHAR** str		/* Pointer to pointer to TCHAR string in configured encoding */
 )
 {
@@ -424,7 +428,7 @@ DWORD ff::tchar2uni (	/* Returns a character in UTF-16 encoding (>=0x10000 on su
 
 
 /* Store a Unicode char in defined API encoding */
-UINT ff::put_utf (	/* Returns number of encoding units written (0:buffer overflow or wrong encoding) */
+UINT Driver::put_utf (	/* Returns number of encoding units written (0:buffer overflow or wrong encoding) */
 	DWORD chr,	/* UTF-16 encoded character (Surrogate pair if >=0x10000) */
 	TCHAR* buf,	/* Output buffer */
 	UINT szb	/* Size of the buffer */
@@ -513,7 +517,7 @@ UINT ff::put_utf (	/* Returns number of encoding units written (0:buffer overflo
 /*-----------------------------------------------------------------------*/
 /* Request/Release grant to access the volume                            */
 /*-----------------------------------------------------------------------*/
-int ff::lock_fs (		/* 1:Ok, 0:timeout */
+int Driver::lock_fs (		/* 1:Ok, 0:timeout */
 	FATFS* fs		/* Filesystem object */
 )
 {
@@ -521,7 +525,7 @@ int ff::lock_fs (		/* 1:Ok, 0:timeout */
 }
 
 
-void ff::unlock_fs (
+void Driver::unlock_fs (
 	FATFS* fs,		/* Filesystem object */
 	FRESULT res		/* Result code to be returned */
 )
@@ -540,7 +544,7 @@ void ff::unlock_fs (
 /* File lock control functions                                           */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::chk_lock (	/* Check if the file can be accessed */
+FRESULT Driver::chk_lock (	/* Check if the file can be accessed */
 	DIR* dp,		/* Directory object pointing the file to be checked */
 	int acc			/* Desired access type (0:Read mode open, 1:Write mode open, 2:Delete or rename) */
 )
@@ -567,7 +571,7 @@ FRESULT ff::chk_lock (	/* Check if the file can be accessed */
 }
 
 
-int ff::enq_lock (void)	/* Check if an entry is available for a new object */
+int Driver::enq_lock (void)	/* Check if an entry is available for a new object */
 {
 	UINT i;
 
@@ -576,7 +580,7 @@ int ff::enq_lock (void)	/* Check if an entry is available for a new object */
 }
 
 
-UINT ff::inc_lock (	/* Increment object open counter and returns its index (0:Internal error) */
+UINT Driver::inc_lock (	/* Increment object open counter and returns its index (0:Internal error) */
 	DIR* dp,	/* Directory object pointing the file to register or increment */
 	int acc		/* Desired access (0:Read, 1:Write, 2:Delete/Rename) */
 )
@@ -607,7 +611,7 @@ UINT ff::inc_lock (	/* Increment object open counter and returns its index (0:In
 }
 
 
-FRESULT ff::dec_lock (	/* Decrement object open counter */
+FRESULT Driver::dec_lock (	/* Decrement object open counter */
 	UINT i			/* Semaphore index (1..) */
 )
 {
@@ -629,7 +633,7 @@ FRESULT ff::dec_lock (	/* Decrement object open counter */
 }
 
 
-void ff::clear_lock (	/* Clear lock entries of the volume */
+void Driver::clear_lock (	/* Clear lock entries of the volume */
 	FATFS *fs
 )
 {
@@ -648,7 +652,7 @@ void ff::clear_lock (	/* Clear lock entries of the volume */
 /* Move/Flush disk access window in the filesystem object                */
 /*-----------------------------------------------------------------------*/
 #if !FF_FS_READONLY
-FRESULT ff::sync_window (	/* Returns FR_OK or FR_DISK_ERR */
+FRESULT Driver::sync_window (	/* Returns FR_OK or FR_DISK_ERR */
 	FATFS* fs			/* Filesystem object */
 )
 {
@@ -656,10 +660,10 @@ FRESULT ff::sync_window (	/* Returns FR_OK or FR_DISK_ERR */
 
 
 	if (fs->wflag) {	/* Is the disk access window dirty? */
-		if (Diskio::disk_write(fs->pdrv, fs->win, fs->winsect, 1) == Diskio::DRESULT::RES_OK) {	/* Write it back into the volume */
+		if (m_diskio->write(fs->pdrv, fs->win, fs->winsect, 1) == DiskioBase::DRESULT::RES_OK) {	/* Write it back into the volume */
 			fs->wflag = 0;	/* Clear window dirty flag */
 			if (fs->winsect - fs->fatbase < fs->fsize) {	/* Is it in the 1st FAT? */
-				if (fs->n_fats == 2) Diskio::disk_write(fs->pdrv, fs->win, fs->winsect + fs->fsize, 1);	/* Reflect it to 2nd FAT if needed */
+				if (fs->n_fats == 2) m_diskio->write(fs->pdrv, fs->win, fs->winsect + fs->fsize, 1);	/* Reflect it to 2nd FAT if needed */
 			}
 		} else {
 			res = FR_DISK_ERR;
@@ -670,7 +674,7 @@ FRESULT ff::sync_window (	/* Returns FR_OK or FR_DISK_ERR */
 #endif
 
 
-FRESULT ff::move_window (	/* Returns FR_OK or FR_DISK_ERR */
+FRESULT Driver::move_window (	/* Returns FR_OK or FR_DISK_ERR */
 	FATFS* fs,		/* Filesystem object */
 	LBA_t sect		/* Sector LBA to make appearance in the fs->win[] */
 )
@@ -683,7 +687,7 @@ FRESULT ff::move_window (	/* Returns FR_OK or FR_DISK_ERR */
 		res = sync_window(fs);		/* Flush the window */
 #endif
 		if (res == FR_OK) {			/* Fill sector window with new data */
-			if (Diskio::disk_read(fs->pdrv, fs->win, sect, 1) != Diskio::Diskio::DRESULT::RES_OK) {
+			if (m_diskio->read(fs->pdrv, fs->win, sect, 1) != DiskioBase::DRESULT::RES_OK) {
 				sect = (LBA_t)0 - 1;	/* Invalidate window if read data is not valid */
 				res = FR_DISK_ERR;
 			}
@@ -701,7 +705,7 @@ FRESULT ff::move_window (	/* Returns FR_OK or FR_DISK_ERR */
 /* Synchronize filesystem and data on the storage                        */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::sync_fs (	/* Returns FR_OK or FR_DISK_ERR */
+FRESULT Driver::sync_fs (	/* Returns FR_OK or FR_DISK_ERR */
 	FATFS* fs		/* Filesystem object */
 )
 {
@@ -712,18 +716,18 @@ FRESULT ff::sync_fs (	/* Returns FR_OK or FR_DISK_ERR */
 	if (res == FR_OK) {
 		if (fs->fs_type == FS_FAT32 && fs->fsi_flag == 1) {	/* FAT32: Update FSInfo sector if needed */
 			/* Create FSInfo structure */
-			memset(fs->win, 0, sizeof fs->win);
+			std::memset(fs->win, 0, sizeof fs->win);
 			st_word(fs->win + BS_55AA, 0xAA55);					/* Boot signature */
 			st_dword(fs->win + FSI_LeadSig, 0x41615252);		/* Leading signature */
 			st_dword(fs->win + FSI_StrucSig, 0x61417272);		/* Structure signature */
 			st_dword(fs->win + FSI_Free_Count, fs->free_clst);	/* Number of free clusters */
 			st_dword(fs->win + FSI_Nxt_Free, fs->last_clst);	/* Last allocated culuster */
 			fs->winsect = fs->volbase + 1;						/* Write it into the FSInfo sector (Next to VBR) */
-			Diskio::disk_write(fs->pdrv, fs->win, fs->winsect, 1);
+			m_diskio->write(fs->pdrv, fs->win, fs->winsect, 1);
 			fs->fsi_flag = 0;
 		}
 		/* Make sure that no pending write process in the lower layer */
-		if (Diskio::Diskio::disk_ioctl(fs->pdrv, Diskio::CTRL_SYNC, 0) != Diskio::Diskio::DRESULT::RES_OK) res = FR_DISK_ERR;
+		if (m_diskio->ioctl(fs->pdrv, DiskioBase::CTRL_SYNC, 0) != DiskioBase::DRESULT::RES_OK) res = FR_DISK_ERR;
 	}
 
 	return res;
@@ -737,7 +741,7 @@ FRESULT ff::sync_fs (	/* Returns FR_OK or FR_DISK_ERR */
 /* Get physical sector number from cluster number                        */
 /*-----------------------------------------------------------------------*/
 
-LBA_t ff::clst2sect (	/* !=0:Sector number, 0:Failed (invalid cluster#) */
+LBA_t Driver::clst2sect (	/* !=0:Sector number, 0:Failed (invalid cluster#) */
 	FATFS* fs,		/* Filesystem object */
 	DWORD clst		/* Cluster# to be converted */
 )
@@ -754,7 +758,7 @@ LBA_t ff::clst2sect (	/* !=0:Sector number, 0:Failed (invalid cluster#) */
 /* FAT access - Read value of an FAT entry                               */
 /*-----------------------------------------------------------------------*/
 
-DWORD ff::get_fat (		/* 0xFFFFFFFF:Disk error, 1:Internal error, 2..0x7FFFFFFF:Cluster status */
+DWORD Driver::get_fat (		/* 0xFFFFFFFF:Disk error, 1:Internal error, 2..0x7FFFFFFF:Cluster status */
 	FFOBJID* obj,	/* Corresponding object */
 	DWORD clst		/* Cluster number to get the value */
 )
@@ -832,7 +836,7 @@ DWORD ff::get_fat (		/* 0xFFFFFFFF:Disk error, 1:Internal error, 2..0x7FFFFFFF:C
 /* FAT access - Change value of an FAT entry                             */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::put_fat (	/* FR_OK(0):succeeded, !=0:error */
+FRESULT Driver::put_fat (	/* FR_OK(0):succeeded, !=0:error */
 	FATFS* fs,		/* Corresponding filesystem object */
 	DWORD clst,		/* FAT index number (cluster number) to be changed */
 	DWORD val		/* New value to be set to the entry */
@@ -897,7 +901,7 @@ FRESULT ff::put_fat (	/* FR_OK(0):succeeded, !=0:error */
 /* Find a contiguous free cluster block */
 /*--------------------------------------*/
 
-DWORD ff::find_bitmap (	/* 0:Not found, 2..:Cluster block found, 0xFFFFFFFF:Disk error */
+DWORD Driver::find_bitmap (	/* 0:Not found, 2..:Cluster block found, 0xFFFFFFFF:Disk error */
 	FATFS* fs,	/* Filesystem object */
 	DWORD clst,	/* Cluster number to scan from */
 	DWORD ncl	/* Number of contiguous clusters to find (1..) */
@@ -937,7 +941,7 @@ DWORD ff::find_bitmap (	/* 0:Not found, 2..:Cluster block found, 0xFFFFFFFF:Disk
 /* Set/Clear a block of allocation bitmap */
 /*----------------------------------------*/
 
-FRESULT ff::change_bitmap (
+FRESULT Driver::change_bitmap (
 	FATFS* fs,	/* Filesystem object */
 	DWORD clst,	/* Cluster number to change from */
 	DWORD ncl,	/* Number of clusters to be changed */
@@ -973,7 +977,7 @@ FRESULT ff::change_bitmap (
 /* Fill the first fragment of the FAT chain    */
 /*---------------------------------------------*/
 
-FRESULT ff::fill_first_frag (
+FRESULT Driver::fill_first_frag (
 	FFOBJID* obj	/* Pointer to the corresponding object */
 )
 {
@@ -996,7 +1000,7 @@ FRESULT ff::fill_first_frag (
 /* Fill the last fragment of the FAT chain     */
 /*---------------------------------------------*/
 
-FRESULT ff::fill_last_frag (
+FRESULT Driver::fill_last_frag (
 	FFOBJID* obj,	/* Pointer to the corresponding object */
 	DWORD lcl,		/* Last cluster of the fragment */
 	DWORD term		/* Value to set the last FAT entry */
@@ -1022,7 +1026,7 @@ FRESULT ff::fill_last_frag (
 /* FAT handling - Remove a cluster chain                                 */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::remove_chain (	/* FR_OK(0):succeeded, !=0:error */
+FRESULT Driver::remove_chain (	/* FR_OK(0):succeeded, !=0:error */
 	FFOBJID* obj,		/* Corresponding object */
 	DWORD clst,			/* Cluster to remove a chain from */
 	DWORD pclst			/* Previous cluster of clst (0 if entire chain) */
@@ -1073,7 +1077,7 @@ FRESULT ff::remove_chain (	/* FR_OK(0):succeeded, !=0:error */
 #if FF_USE_TRIM
 			rt[0] = clst2sect(fs, scl);					/* Start of data area to be freed */
 			rt[1] = clst2sect(fs, ecl) + fs->csize - 1;	/* End of data area to be freed */
-			Diskio::Diskio::disk_ioctl(fs->pdrv, Diskio::Diskio::CTRL_TRIM, rt);		/* Inform storage device that the data in the block may be erased */
+			m_diskio->ioctl(fs->pdrv, DiskioBase::CTRL_TRIM, rt);		/* Inform storage device that the data in the block may be erased */
 #endif
 			scl = ecl = nxt;
 		}
@@ -1117,7 +1121,7 @@ FRESULT ff::remove_chain (	/* FR_OK(0):succeeded, !=0:error */
 /* FAT handling - Stretch a chain or Create a new chain                  */
 /*-----------------------------------------------------------------------*/
 
-DWORD ff::create_chain (	/* 0:No free cluster, 1:Internal error, 0xFFFFFFFF:Disk error, >=2:New cluster# */
+DWORD Driver::create_chain (	/* 0:No free cluster, 1:Internal error, 0xFFFFFFFF:Disk error, >=2:New cluster# */
 	FFOBJID* obj,		/* Corresponding object */
 	DWORD clst			/* Cluster# to stretch, 0:Create a new chain */
 )
@@ -1218,7 +1222,7 @@ DWORD ff::create_chain (	/* 0:No free cluster, 1:Internal error, 0xFFFFFFFF:Disk
 /* FAT handling - Convert offset into cluster with link map table        */
 /*-----------------------------------------------------------------------*/
 
-DWORD ff::clmt_clust (	/* <2:Error, >=2:Cluster number */
+DWORD Driver::clmt_clust (	/* <2:Error, >=2:Cluster number */
 	FIL* fp,		/* Pointer to the file object */
 	FSIZE_t ofs		/* File offset to be converted to cluster# */
 )
@@ -1248,7 +1252,7 @@ DWORD ff::clmt_clust (	/* <2:Error, >=2:Cluster number */
 /*-----------------------------------------------------------------------*/
 
 #if !FF_FS_READONLY
-FRESULT ff::dir_clear (	/* Returns FR_OK or FR_DISK_ERR */
+FRESULT Driver::dir_clear (	/* Returns FR_OK or FR_DISK_ERR */
 	FATFS *fs,		/* Filesystem object */
 	DWORD clst		/* Directory table to clear */
 )
@@ -1261,20 +1265,20 @@ FRESULT ff::dir_clear (	/* Returns FR_OK or FR_DISK_ERR */
 	if (sync_window(fs) != FR_OK) return FR_DISK_ERR;	/* Flush disk access window */
 	sect = clst2sect(fs, clst);		/* Top of the cluster */
 	fs->winsect = sect;				/* Set window to top of the cluster */
-	memset(fs->win, 0, sizeof fs->win);	/* Clear window buffer */
+	std::memset(fs->win, 0, sizeof fs->win);	/* Clear window buffer */
 #if FF_USE_LFN == 3		/* Quick table clear by using multi-secter write */
 	/* Allocate a temporary buffer */
 	for (szb = ((DWORD)fs->csize * SS(fs) >= MAX_MALLOC) ? MAX_MALLOC : fs->csize * SS(fs), ibuf = 0; szb > SS(fs) && (ibuf = ff_memalloc(szb)) == 0; szb /= 2) ;
 	if (szb > SS(fs)) {		/* Buffer allocated? */
-		memset(ibuf, 0, szb);
+		std::memset(ibuf, 0, szb);
 		szb /= SS(fs);		/* Bytes -> Sectors */
-		for (n = 0; n < fs->csize && Diskio::disk_write(fs->pdrv, ibuf, sect + n, szb) == Diskio::DRESULT::RES_OK; n += szb) ;	/* Fill the cluster with 0 */
+		for (n = 0; n < fs->csize && m_diskio->write(fs->pdrv, ibuf, sect + n, szb) == DiskioBase::DRESULT::RES_OK; n += szb) ;	/* Fill the cluster with 0 */
 		ff_memfree(ibuf);
 	} else
 #endif
 	{
 		ibuf = fs->win; szb = 1;	/* Use window buffer (many single-sector writes may take a time) */
-		for (n = 0; n < fs->csize && Diskio::disk_write(fs->pdrv, ibuf, sect + n, szb) == Diskio::Diskio::DRESULT::RES_OK; n += szb) ;	/* Fill the cluster with 0 */
+		for (n = 0; n < fs->csize && m_diskio->write(fs->pdrv, ibuf, sect + n, szb) == DiskioBase::DRESULT::RES_OK; n += szb) ;	/* Fill the cluster with 0 */
 	}
 	return (n == fs->csize) ? FR_OK : FR_DISK_ERR;
 }
@@ -1287,7 +1291,7 @@ FRESULT ff::dir_clear (	/* Returns FR_OK or FR_DISK_ERR */
 /* Directory handling - Set directory index                              */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::dir_sdi (	/* FR_OK(0):succeeded, !=0:error */
+FRESULT Driver::dir_sdi (	/* FR_OK(0):succeeded, !=0:error */
 	DIR* dp,		/* Pointer to directory object */
 	DWORD ofs		/* Offset of directory table */
 )
@@ -1335,7 +1339,7 @@ FRESULT ff::dir_sdi (	/* FR_OK(0):succeeded, !=0:error */
 /* Directory handling - Move directory table index next                  */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::dir_next (	/* FR_OK(0):succeeded, FR_NO_FILE:End of table, FR_DENIED:Could not stretch */
+FRESULT Driver::dir_next (	/* FR_OK(0):succeeded, FR_NO_FILE:End of table, FR_DENIED:Could not stretch */
 	DIR* dp,				/* Pointer to the directory object */
 	int stretch				/* 0: Do not stretch table, 1: Stretch table if needed */
 )
@@ -1396,7 +1400,7 @@ FRESULT ff::dir_next (	/* FR_OK(0):succeeded, FR_NO_FILE:End of table, FR_DENIED
 /* Directory handling - Reserve a block of directory entries             */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::dir_alloc (	/* FR_OK(0):succeeded, !=0:error */
+FRESULT Driver::dir_alloc (	/* FR_OK(0):succeeded, !=0:error */
 	DIR* dp,				/* Pointer to the directory object */
 	UINT n_ent				/* Number of contiguous entries to allocate */
 )
@@ -1438,7 +1442,7 @@ FRESULT ff::dir_alloc (	/* FR_OK(0):succeeded, !=0:error */
 /* FAT: Directory handling - Load/Store start cluster number             */
 /*-----------------------------------------------------------------------*/
 
-DWORD ff::ld_clust (	/* Returns the top cluster value of the SFN entry */
+DWORD Driver::ld_clust (	/* Returns the top cluster value of the SFN entry */
 	FATFS* fs,			/* Pointer to the fs object */
 	const BYTE* dir		/* Pointer to the key entry */
 )
@@ -1455,7 +1459,7 @@ DWORD ff::ld_clust (	/* Returns the top cluster value of the SFN entry */
 
 
 #if !FF_FS_READONLY
-void ff::st_clust (
+void Driver::st_clust (
 	FATFS* fs,	/* Pointer to the fs object */
 	BYTE* dir,	/* Pointer to the key entry */
 	DWORD cl	/* Value to be set */
@@ -1475,7 +1479,7 @@ void ff::st_clust (
 /* FAT-LFN: Compare a part of file name with an LFN entry */
 /*--------------------------------------------------------*/
 
-int ff::cmp_lfn (		/* 1:matched, 0:not matched */
+int Driver::cmp_lfn (		/* 1:matched, 0:not matched */
 	const WCHAR* lfnbuf,	/* Pointer to the LFN working buffer to be compared */
 	BYTE* dir				/* Pointer to the directory entry containing the part of LFN */
 )
@@ -1511,7 +1515,7 @@ int ff::cmp_lfn (		/* 1:matched, 0:not matched */
 /* FAT-LFN: Pick a part of file name from an LFN entry */
 /*-----------------------------------------------------*/
 
-int ff::pick_lfn (	/* 1:succeeded, 0:buffer overflow or invalid LFN entry */
+int Driver::pick_lfn (	/* 1:succeeded, 0:buffer overflow or invalid LFN entry */
 	WCHAR* lfnbuf,		/* Pointer to the LFN working buffer */
 	BYTE* dir			/* Pointer to the LFN entry */
 )
@@ -1549,7 +1553,7 @@ int ff::pick_lfn (	/* 1:succeeded, 0:buffer overflow or invalid LFN entry */
 /* FAT-LFN: Create an entry of LFN entries */
 /*-----------------------------------------*/
 
-void ff::put_lfn (
+void Driver::put_lfn (
 	const WCHAR* lfn,	/* Pointer to the LFN */
 	BYTE* dir,			/* Pointer to the LFN entry to be created */
 	BYTE ord,			/* LFN order (1-20) */
@@ -1586,7 +1590,7 @@ void ff::put_lfn (
 /* FAT-LFN: Create a Numbered SFN                                        */
 /*-----------------------------------------------------------------------*/
 
-void ff::gen_numname (
+void Driver::gen_numname (
 	BYTE* dst,			/* Pointer to the buffer to store numbered SFN */
 	const BYTE* src,	/* Pointer to SFN in directory form */
 	const WCHAR* lfn,	/* Pointer to LFN */
@@ -1643,7 +1647,7 @@ void ff::gen_numname (
 /* FAT-LFN: Calculate checksum of an SFN entry                           */
 /*-----------------------------------------------------------------------*/
 
-BYTE ff::sum_sfn (
+BYTE Driver::sum_sfn (
 	const BYTE* dir		/* Pointer to the SFN entry */
 )
 {
@@ -1665,7 +1669,7 @@ BYTE ff::sum_sfn (
 /* exFAT: Checksum                                                       */
 /*-----------------------------------------------------------------------*/
 
-WORD ff::xdir_sum (	/* Get checksum of the directoly entry block */
+WORD Driver::xdir_sum (	/* Get checksum of the directoly entry block */
 	const BYTE* dir		/* Directory entry block to be calculated */
 )
 {
@@ -1686,7 +1690,7 @@ WORD ff::xdir_sum (	/* Get checksum of the directoly entry block */
 
 
 
-WORD ff::xname_sum (	/* Get check sum (to be used as hash) of the file name */
+WORD Driver::xname_sum (	/* Get check sum (to be used as hash) of the file name */
 	const WCHAR* name	/* File name to be calculated */
 )
 {
@@ -1704,7 +1708,7 @@ WORD ff::xname_sum (	/* Get check sum (to be used as hash) of the file name */
 
 
 #if !FF_FS_READONLY && FF_USE_MKFS
-DWORD ff::xsum32 (	/* Returns 32-bit checksum */
+DWORD Driver::xsum32 (	/* Returns 32-bit checksum */
 	BYTE  dat,			/* Byte to be calculated (byte-by-byte processing) */
 	DWORD sum			/* Previous sum value */
 )
@@ -1720,7 +1724,7 @@ DWORD ff::xsum32 (	/* Returns 32-bit checksum */
 /* exFAT: Get a directry entry block */
 /*-----------------------------------*/
 
-FRESULT ff::load_xdir (	/* FR_INT_ERR: invalid entry block */
+FRESULT Driver::load_xdir (	/* FR_INT_ERR: invalid entry block */
 	DIR* dp					/* Reading direcotry object pointing top of the entry block to load */
 )
 {
@@ -1771,7 +1775,7 @@ FRESULT ff::load_xdir (	/* FR_INT_ERR: invalid entry block */
 /* exFAT: Initialize object allocation info with loaded entry block */
 /*------------------------------------------------------------------*/
 
-void ff::init_alloc_info (
+void Driver::init_alloc_info (
 	FATFS* fs,		/* Filesystem object */
 	FFOBJID* obj	/* Object allocation information to be initialized */
 )
@@ -1789,7 +1793,7 @@ void ff::init_alloc_info (
 /* exFAT: Load the object's directory entry block */
 /*------------------------------------------------*/
 
-FRESULT ff::load_obj_xdir (
+FRESULT Driver::load_obj_xdir (
 	DIR* dp,			/* Blank directory object to be used to access containing direcotry */
 	const FFOBJID* obj	/* Object with its containing directory information */
 )
@@ -1818,7 +1822,7 @@ FRESULT ff::load_obj_xdir (
 /* exFAT: Store the directory entry block */
 /*----------------------------------------*/
 
-FRESULT ff::store_xdir (
+FRESULT Driver::store_xdir (
 	DIR* dp				/* Pointer to the direcotry object */
 )
 {
@@ -1850,7 +1854,7 @@ FRESULT ff::store_xdir (
 /* exFAT: Create a new directory enrty block */
 /*-------------------------------------------*/
 
-void ff::create_xdir (
+void Driver::create_xdir (
 	BYTE* dirb,			/* Pointer to the direcotry entry block buffer */
 	const WCHAR* lfn	/* Pointer to the object name */
 )
@@ -1861,7 +1865,7 @@ void ff::create_xdir (
 
 
 	/* Create file-directory and stream-extension entry */
-	memset(dirb, 0, 2 * SZDIRE);
+	std::memset(dirb, 0, 2 * SZDIRE);
 	dirb[0 * SZDIRE + XDIR_Type] = ET_FILEDIR;
 	dirb[1 * SZDIRE + XDIR_Type] = ET_STREAM;
 
@@ -1896,7 +1900,7 @@ void ff::create_xdir (
 #define DIR_READ_FILE(dp) dir_read(dp, 0)
 #define DIR_READ_LABEL(dp) dir_read(dp, 1)
 
-FRESULT ff::dir_read (
+FRESULT Driver::dir_read (
 	DIR* dp,		/* Pointer to the directory object */
 	int vol			/* Filtered by 0:file/directory or 1:volume label */
 )
@@ -1974,7 +1978,7 @@ FRESULT ff::dir_read (
 /* Directory handling - Find an object in the directory                  */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::dir_find (	/* FR_OK(0):succeeded, !=0:error */
+FRESULT Driver::dir_find (	/* FR_OK(0):succeeded, !=0:error */
 	DIR* dp					/* Pointer to the directory object with the file name */
 )
 {
@@ -2055,7 +2059,7 @@ FRESULT ff::dir_find (	/* FR_OK(0):succeeded, !=0:error */
 /* Register an object to the directory                                   */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::dir_register (	/* FR_OK:succeeded, FR_DENIED:no free entry or too many SFN collision, FR_DISK_ERR:disk error */
+FRESULT Driver::dir_register (	/* FR_OK:succeeded, FR_DENIED:no free entry or too many SFN collision, FR_DISK_ERR:disk error */
 	DIR* dp						/* Target directory with object name to be created */
 )
 {
@@ -2140,7 +2144,7 @@ FRESULT ff::dir_register (	/* FR_OK:succeeded, FR_DENIED:no free entry or too ma
 	if (res == FR_OK) {
 		res = move_window(fs, dp->sect);
 		if (res == FR_OK) {
-			memset(dp->dir, 0, SZDIRE);	/* Clean the entry */
+			std::memset(dp->dir, 0, SZDIRE);	/* Clean the entry */
 			memcpy(dp->dir + DIR_Name, dp->fn, 11);	/* Put SFN */
 #if FF_USE_LFN
 			dp->dir[DIR_NTres] = dp->fn[NSFLAG] & (NS_BODY | NS_EXT);	/* Put NT flag */
@@ -2161,7 +2165,7 @@ FRESULT ff::dir_register (	/* FR_OK:succeeded, FR_DENIED:no free entry or too ma
 /* Remove an object from the directory                                   */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::dir_remove (	/* FR_OK:Succeeded, FR_DISK_ERR:A disk error */
+FRESULT Driver::dir_remove (	/* FR_OK:Succeeded, FR_DISK_ERR:A disk error */
 	DIR* dp					/* Directory object pointing the entry to be removed */
 )
 {
@@ -2207,7 +2211,7 @@ FRESULT ff::dir_remove (	/* FR_OK:Succeeded, FR_DISK_ERR:A disk error */
 /* Get file information from directory entry                             */
 /*-----------------------------------------------------------------------*/
 
-void ff::get_fileinfo (
+void Driver::get_fileinfo (
 	DIR* dp,			/* Pointer to the directory object */
 	FILINFO* fno		/* Pointer to the file information to be filled */
 )
@@ -2342,7 +2346,7 @@ void ff::get_fileinfo (
 #define FIND_RECURS	4	/* Maximum number of wildcard terms in the pattern to limit recursion */
 
 
-DWORD ff::get_achar (	/* Get a character and advance ptr */
+DWORD Driver::get_achar (	/* Get a character and advance ptr */
 	const TCHAR** ptr		/* Pointer to pointer to the ANSI/OEM or Unicode string */
 )
 {
@@ -2373,7 +2377,7 @@ DWORD ff::get_achar (	/* Get a character and advance ptr */
 }
 
 
-int ff::pattern_match (	/* 0:mismatched, 1:matched */
+int Driver::pattern_match (	/* 0:mismatched, 1:matched */
 	const TCHAR* pat,	/* Matching pattern */
 	const TCHAR* nam,	/* String to be tested */
 	UINT skip,			/* Number of pre-skip chars (number of ?s, b8:infinite (* specified)) */
@@ -2422,7 +2426,7 @@ int ff::pattern_match (	/* 0:mismatched, 1:matched */
 /* Pick a top segment and create the object name in directory form       */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::create_name (	/* FR_OK: successful, FR_INVALID_NAME: could not create */
+FRESULT Driver::create_name (	/* FR_OK: successful, FR_INVALID_NAME: could not create */
 	DIR* dp,					/* Pointer to the directory object */
 	const TCHAR** path			/* Pointer to pointer to the segment in the path string */
 )
@@ -2480,7 +2484,7 @@ FRESULT ff::create_name (	/* FR_OK: successful, FR_INVALID_NAME: could not creat
 	if (si > 0 || lfn[si] == '.') cf |= NS_LOSS | NS_LFN;	/* Is there any leading space or dot? */
 	while (di > 0 && lfn[di - 1] != '.') di--;	/* Find last dot (di<=si: no extension) */
 
-	memset(dp->fn, ' ', 11);
+	std::memset(dp->fn, ' ', 11);
 	i = b = 0; ni = 8;
 	for (;;) {
 		wc = lfn[si++];					/* Get an LFN character */
@@ -2560,7 +2564,7 @@ FRESULT ff::create_name (	/* FR_OK: successful, FR_INVALID_NAME: could not creat
 
 	/* Create file name in directory form */
 	p = *path; sfn = dp->fn;
-	memset(sfn, ' ', 11);
+	std::memset(sfn, ' ', 11);
 	si = i = 0; ni = 8;
 #if FF_FS_RPATH != 0
 	if (p[si] == '.') { /* Is this a dot entry? */
@@ -2624,7 +2628,7 @@ FRESULT ff::create_name (	/* FR_OK: successful, FR_INVALID_NAME: could not creat
 /* Follow a file path                                                    */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::follow_path (	/* FR_OK(0): successful, !=0: error code */
+FRESULT Driver::follow_path (	/* FR_OK(0): successful, !=0: error code */
 	DIR* dp,					/* Directory object to return last directory and found object */
 	const TCHAR* path			/* Full-path string to find a file or directory */
 )
@@ -2711,7 +2715,7 @@ FRESULT ff::follow_path (	/* FR_OK(0): successful, !=0: error code */
 /* Get logical drive number from path name                               */
 /*-----------------------------------------------------------------------*/
 
-int ff::get_ldnumber (	/* Returns logical drive number (-1:invalid drive number or null pointer) */
+int Driver::get_ldnumber (	/* Returns logical drive number (-1:invalid drive number or null pointer) */
 	const TCHAR** path		/* Pointer to pointer to the path name */
 )
 {
@@ -2791,7 +2795,7 @@ int ff::get_ldnumber (	/* Returns logical drive number (-1:invalid drive number 
 
 /* Calculate CRC32 in byte-by-byte */
 
-DWORD ff::crc32 (	/* Returns next CRC value */
+DWORD Driver::crc32 (	/* Returns next CRC value */
 	DWORD crc,			/* Current CRC value */
 	BYTE d				/* A byte to be processed */
 )
@@ -2809,7 +2813,7 @@ DWORD ff::crc32 (	/* Returns next CRC value */
 
 /* Check validity of GPT header */
 
-int ff::test_gpt_header (	/* 0:Invalid, 1:Valid */
+int Driver::test_gpt_header (	/* 0:Invalid, 1:Valid */
 	const BYTE* gpth			/* Pointer to the GPT header */
 )
 {
@@ -2831,7 +2835,7 @@ int ff::test_gpt_header (	/* 0:Invalid, 1:Valid */
 #if !FF_FS_READONLY && FF_USE_MKFS
 
 /* Generate random value */
-DWORD ff::make_rand (
+DWORD Driver::make_rand (
 	DWORD seed,		/* Seed value */
 	BYTE* buff,		/* Output buffer */
 	UINT n			/* Data length */
@@ -2859,7 +2863,7 @@ DWORD ff::make_rand (
 
 /* Check what the sector is */
 
-UINT ff::check_fs (	/* 0:FAT/FAT32 VBR, 1:exFAT VBR, 2:Not FAT and valid BS, 3:Not FAT and invalid BS, 4:Disk error */
+UINT Driver::check_fs (	/* 0:FAT/FAT32 VBR, 1:exFAT VBR, 2:Not FAT and valid BS, 3:Not FAT and invalid BS, 4:Disk error */
 	FATFS* fs,			/* Filesystem object */
 	LBA_t sect			/* Sector to load and check if it is an FAT-VBR or not */
 )
@@ -2899,7 +2903,7 @@ UINT ff::check_fs (	/* 0:FAT/FAT32 VBR, 1:exFAT VBR, 2:Not FAT and valid BS, 3:N
 /* Find an FAT volume */
 /* (It supports only generic partitioning rules, MBR, GPT and SFD) */
 
-UINT ff::find_volume (	/* Returns BS status found in the hosting drive */
+UINT Driver::find_volume (	/* Returns BS status found in the hosting drive */
 	FATFS* fs,		/* Filesystem object */
 	UINT part		/* Partition to fined = 0:auto, 1..:forced */
 )
@@ -2953,14 +2957,14 @@ UINT ff::find_volume (	/* Returns BS status found in the hosting drive */
 /* Determine logical drive number and mount the volume if needed         */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::mount_volume (	/* FR_OK(0): successful, !=0: an error occurred */
+FRESULT Driver::mount_volume (	/* FR_OK(0): successful, !=0: an error occurred */
 	const TCHAR** path,			/* Pointer to pointer to the path name (drive number) */
 	FATFS** rfs,				/* Pointer to pointer to the found filesystem object */
 	BYTE mode					/* !=0: Check write protection for write access */
 )
 {
 	int vol;
-	Diskio::DSTATUS stat;
+	DiskioBase::DSTATUS stat;
 	LBA_t bsect;
 	DWORD tsect, sysect, fasize, nclst, szbfat;
 	WORD nrsv;
@@ -2983,9 +2987,9 @@ FRESULT ff::mount_volume (	/* FR_OK(0): successful, !=0: an error occurred */
 
 	mode &= (BYTE)~FA_READ;				/* Desired access mode, write access or not */
 	if (fs->fs_type != 0) {				/* If the volume has been mounted */
-		stat = Diskio::disk_status(fs->pdrv);
-		if (!(stat & Diskio::STA_NOINIT)) {		/* and the physical drive is kept initialized */
-			if (!FF_FS_READONLY && mode && (stat & Diskio::STA_PROTECT)) {	/* Check write protection if needed */
+		stat = m_diskio->status(fs->pdrv);
+		if (!(stat & DiskioBase::STA_NOINIT)) {		/* and the physical drive is kept initialized */
+			if (!FF_FS_READONLY && mode && (stat & DiskioBase::STA_PROTECT)) {	/* Check write protection if needed */
 				return FR_WRITE_PROTECTED;
 			}
 			return FR_OK;				/* The filesystem object is already valid */
@@ -2997,15 +3001,15 @@ FRESULT ff::mount_volume (	/* FR_OK(0): successful, !=0: an error occurred */
 
 	fs->fs_type = 0;					/* Clear the filesystem object */
 	fs->pdrv = LD2PD(vol);				/* Volume hosting physical drive */
-	stat = Diskio::disk_initialize(fs->pdrv);	/* Initialize the physical drive */
-	if (stat & Diskio::STA_NOINIT) { 			/* Check if the initialization succeeded */
+	stat = m_diskio->initialize(fs->pdrv);	/* Initialize the physical drive */
+	if (stat & DiskioBase::STA_NOINIT) { 			/* Check if the initialization succeeded */
 		return FR_NOT_READY;			/* Failed to initialize due to no medium or hard error */
 	}
-	if (!FF_FS_READONLY && mode && (stat & Diskio::STA_PROTECT)) { /* Check disk write protection if needed */
+	if (!FF_FS_READONLY && mode && (stat & DiskioBase::STA_PROTECT)) { /* Check disk write protection if needed */
 		return FR_WRITE_PROTECTED;
 	}
 #if FF_MAX_SS != FF_MIN_SS				/* Get sector size (multiple sector size cfg only) */
-	if (Diskio::disk_ioctl(fs->pdrv, GET_SECTOR_SIZE, &SS(fs)) != Diskio::DRESULT::RES_OK) return FR_DISK_ERR;
+	if (m_diskio->ioctl(fs->pdrv, GET_SECTOR_SIZE, &SS(fs)) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;
 	if (SS(fs) > FF_MAX_SS || SS(fs) < FF_MIN_SS || (SS(fs) & (SS(fs) - 1))) return FR_DISK_ERR;
 #endif
 
@@ -3182,7 +3186,7 @@ FRESULT ff::mount_volume (	/* FR_OK(0): successful, !=0: an error occurred */
 /* Check if the file/directory object is valid or not                    */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::validate (	/* Returns FR_OK or FR_INVALID_OBJECT */
+FRESULT Driver::validate (	/* Returns FR_OK or FR_INVALID_OBJECT */
 	FFOBJID* obj,			/* Pointer to the FFOBJID, the 1st member in the FIL/DIR object, to check validity */
 	FATFS** rfs				/* Pointer to pointer to the owner filesystem object to return */
 )
@@ -3193,7 +3197,7 @@ FRESULT ff::validate (	/* Returns FR_OK or FR_INVALID_OBJECT */
 	if (obj && obj->fs && obj->fs->fs_type && obj->id == obj->fs->id) {	/* Test if the object is valid */
 #if FF_FS_REENTRANT
 		if (lock_fs(obj->fs)) {	/* Obtain the filesystem object */
-			if (!(Diskio::disk_status(obj->fs->pdrv) & STA_NOINIT)) { /* Test if the phsical drive is kept initialized */
+			if (!(m_diskio->status(obj->fs->pdrv) & STA_NOINIT)) { /* Test if the phsical drive is kept initialized */
 				res = FR_OK;
 			} else {
 				unlock_fs(obj->fs, FR_OK);
@@ -3202,7 +3206,7 @@ FRESULT ff::validate (	/* Returns FR_OK or FR_INVALID_OBJECT */
 			res = FR_TIMEOUT;
 		}
 #else
-		if (!(Diskio::disk_status(obj->fs->pdrv) & Diskio::STA_NOINIT)) { /* Test if the phsical drive is kept initialized */
+		if (!(m_diskio->status(obj->fs->pdrv) & DiskioBase::STA_NOINIT)) { /* Test if the phsical drive is kept initialized */
 			res = FR_OK;
 		}
 #endif
@@ -3224,7 +3228,7 @@ FRESULT ff::validate (	/* Returns FR_OK or FR_INVALID_OBJECT */
 /* Mount/Unmount a Logical Drive                                         */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_mount (
+FRESULT Driver::f_mount (
 	FATFS* fs,			/* Pointer to the filesystem object to be registered (NULL:unmount)*/
 	const TCHAR* path,	/* Logical drive number to be mounted/unmounted */
 	BYTE opt			/* Mount option: 0=Do not mount (delayed mount), 1=Mount immediately */
@@ -3272,7 +3276,7 @@ FRESULT ff::f_mount (
 /* Open or Create a File                                                 */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_open (
+FRESULT Driver::f_open (
 	FIL* fp,			/* Pointer to the blank file object */
 	const TCHAR* path,	/* Pointer to the file name */
 	BYTE mode			/* Access mode and open mode flags */
@@ -3335,8 +3339,8 @@ FRESULT ff::f_open (
 					fp->obj.fs = fs;
 					init_alloc_info(fs, &fp->obj);
 					/* Set directory entry block initial state */
-					memset(fs->dirbuf + 2, 0, 30);	/* Clear 85 entry except for NumSec */
-					memset(fs->dirbuf + 38, 0, 26);	/* Clear C0 entry except for NumName and NameHash */
+					std::memset(fs->dirbuf + 2, 0, 30);	/* Clear 85 entry except for NumSec */
+					std::memset(fs->dirbuf + 38, 0, 26);	/* Clear C0 entry except for NumName and NameHash */
 					fs->dirbuf[XDIR_Attr] = AM_ARC;
 					st_dword(fs->dirbuf + XDIR_CrtTime, GET_FATTIME());
 					fs->dirbuf[XDIR_GenFlags] = 1;
@@ -3424,7 +3428,7 @@ FRESULT ff::f_open (
 			fp->fptr = 0;		/* Set file pointer top of the file */
 #if !FF_FS_READONLY
 #if !FF_FS_TINY
-			memset(fp->buf, 0, sizeof fp->buf);	/* Clear sector buffer */
+			std::memset(fp->buf, 0, sizeof fp->buf);	/* Clear sector buffer */
 #endif
 			if ((mode & FA_SEEKEND) && fp->obj.objsize > 0) {	/* Seek to end of file if FA_OPEN_APPEND is specified */
 				fp->fptr = fp->obj.objsize;			/* Offset to seek */
@@ -3443,7 +3447,7 @@ FRESULT ff::f_open (
 					} else {
 						fp->sect = sc + (DWORD)(ofs / SS(fs));
 #if !FF_FS_TINY
-						if (Diskio::disk_read(fs->pdrv, fp->buf, fp->sect, 1) != Diskio::Diskio::DRESULT::RES_OK) res = FR_DISK_ERR;
+						if (m_diskio->read(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) res = FR_DISK_ERR;
 #endif
 					}
 				}
@@ -3469,7 +3473,7 @@ FRESULT ff::f_open (
 /* Read File                                                             */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_read (
+FRESULT Driver::f_read (
 	FIL* fp, 	/* Open file to be read */
 	void* buff,	/* Data buffer to store the read data */
 	UINT btr,	/* Number of bytes to read */
@@ -3520,7 +3524,7 @@ FRESULT ff::f_read (
 				if (csect + cc > fs->csize) {	/* Clip at cluster boundary */
 					cc = fs->csize - csect;
 				}
-				if (Diskio::disk_read(fs->pdrv, rbuff, sect, cc) != Diskio::Diskio::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+				if (m_diskio->read(fs->pdrv, rbuff, sect, cc) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 #if !FF_FS_READONLY && FF_FS_MINIMIZE <= 2		/* Replace one of the read sectors with cached data if it contains a dirty sector */
 #if FF_FS_TINY
 				if (fs->wflag && fs->winsect - sect < cc) {
@@ -3539,11 +3543,11 @@ FRESULT ff::f_read (
 			if (fp->sect != sect) {			/* Load data sector if not in cache */
 #if !FF_FS_READONLY
 				if (fp->flag & FA_DIRTY) {		/* Write-back dirty sector cache */
-					if (Diskio::disk_write(fs->pdrv, fp->buf, fp->sect, 1) != Diskio::Diskio::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+					if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 					fp->flag &= (BYTE)~FA_DIRTY;
 				}
 #endif
-				if (Diskio::disk_read(fs->pdrv, fp->buf, sect, 1) != Diskio::Diskio::DRESULT::RES_OK)	ABORT(fs, FR_DISK_ERR);	/* Fill sector cache */
+				if (m_diskio->read(fs->pdrv, fp->buf, sect, 1) != DiskioBase::DRESULT::RES_OK)	ABORT(fs, FR_DISK_ERR);	/* Fill sector cache */
 			}
 #endif
 			fp->sect = sect;
@@ -3569,7 +3573,7 @@ FRESULT ff::f_read (
 /* Write File                                                            */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_write (
+FRESULT Driver::f_write (
 	FIL* fp,			/* Open file to be written */
 	const void* buff,	/* Data to be written */
 	UINT btw,			/* Number of bytes to write */
@@ -3623,7 +3627,7 @@ FRESULT ff::f_write (
 			if (fs->winsect == fp->sect && sync_window(fs) != FR_OK) ABORT(fs, FR_DISK_ERR);	/* Write-back sector cache */
 #else
 			if (fp->flag & FA_DIRTY) {		/* Write-back sector cache */
-				if (Diskio::disk_write(fs->pdrv, fp->buf, fp->sect, 1) != Diskio::Diskio::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+				if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 				fp->flag &= (BYTE)~FA_DIRTY;
 			}
 #endif
@@ -3635,7 +3639,7 @@ FRESULT ff::f_write (
 				if (csect + cc > fs->csize) {	/* Clip at cluster boundary */
 					cc = fs->csize - csect;
 				}
-				if (Diskio::disk_write(fs->pdrv, wbuff, sect, cc) != Diskio::Diskio::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+				if (m_diskio->write(fs->pdrv, wbuff, sect, cc) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 #if FF_FS_MINIMIZE <= 2
 #if FF_FS_TINY
 				if (fs->winsect - sect < cc) {	/* Refill sector cache if it gets invalidated by the direct write */
@@ -3660,7 +3664,7 @@ FRESULT ff::f_write (
 #else
 			if (fp->sect != sect && 		/* Fill sector cache with file data */
 				fp->fptr < fp->obj.objsize &&
-				Diskio::disk_read(fs->pdrv, fp->buf, sect, 1) != Diskio::Diskio::DRESULT::RES_OK) {
+				m_diskio->read(fs->pdrv, fp->buf, sect, 1) != DiskioBase::DRESULT::RES_OK) {
 					ABORT(fs, FR_DISK_ERR);
 			}
 #endif
@@ -3690,7 +3694,7 @@ FRESULT ff::f_write (
 /* Synchronize the File                                                  */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_sync (
+FRESULT Driver::f_sync (
 	FIL* fp		/* Open file to be synced */
 )
 {
@@ -3705,7 +3709,7 @@ FRESULT ff::f_sync (
 		if (fp->flag & FA_MODIFIED) {	/* Is there any change to the file? */
 #if !FF_FS_TINY
 			if (fp->flag & FA_DIRTY) {	/* Write-back cached data if needed */
-				if (Diskio::disk_write(fs->pdrv, fp->buf, fp->sect, 1) != Diskio::Diskio::DRESULT::RES_OK) LEAVE_FF(fs, FR_DISK_ERR);
+				if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_FF(fs, FR_DISK_ERR);
 				fp->flag &= (BYTE)~FA_DIRTY;
 			}
 #endif
@@ -3771,7 +3775,7 @@ FRESULT ff::f_sync (
 /* Close File                                                            */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_close (
+FRESULT Driver::f_close (
 	FIL* fp		/* Open file to be closed */
 )
 {
@@ -3807,7 +3811,7 @@ FRESULT ff::f_close (
 /* Change Current Directory or Current Drive, Get Current Directory      */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_chdrive (
+FRESULT Driver::f_chdrive (
 	const TCHAR* path		/* Drive number to set */
 )
 {
@@ -3824,7 +3828,7 @@ FRESULT ff::f_chdrive (
 
 
 
-FRESULT ff::f_chdir (
+FRESULT Driver::f_chdir (
 	const TCHAR* path	/* Pointer to the directory path */
 )
 {
@@ -3886,7 +3890,7 @@ FRESULT ff::f_chdir (
 
 
 #if FF_FS_RPATH >= 2
-FRESULT ff::f_getcwd (
+FRESULT Driver::f_getcwd (
 	TCHAR* buff,	/* Pointer to the directory path */
 	UINT len		/* Size of buff in unit of TCHAR */
 )
@@ -3986,7 +3990,7 @@ FRESULT ff::f_getcwd (
 /* Seek File Read/Write Pointer                                          */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_lseek (
+FRESULT Driver::f_lseek (
 	FIL* fp,		/* Pointer to the file object */
 	FSIZE_t ofs		/* File pointer from top of file */
 )
@@ -4050,11 +4054,11 @@ FRESULT ff::f_lseek (
 #if !FF_FS_TINY
 #if !FF_FS_READONLY
 					if (fp->flag & FA_DIRTY) {		/* Write-back dirty sector cache */
-						if (Diskio::disk_write(fs->pdrv, fp->buf, fp->sect, 1) != Diskio::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+						if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 						fp->flag &= (BYTE)~FA_DIRTY;
 					}
 #endif
-					if (Diskio::disk_read(fs->pdrv, fp->buf, dsc, 1) != Diskio::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);	/* Load current sector */
+					if (m_diskio->read(fs->pdrv, fp->buf, dsc, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);	/* Load current sector */
 #endif
 					fp->sect = dsc;
 				}
@@ -4130,11 +4134,11 @@ FRESULT ff::f_lseek (
 #if !FF_FS_TINY
 #if !FF_FS_READONLY
 			if (fp->flag & FA_DIRTY) {			/* Write-back dirty sector cache */
-				if (Diskio::disk_write(fs->pdrv, fp->buf, fp->sect, 1) != Diskio::Diskio::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+				if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 				fp->flag &= (BYTE)~FA_DIRTY;
 			}
 #endif
-			if (Diskio::disk_read(fs->pdrv, fp->buf, nsect, 1) != Diskio::Diskio::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);	/* Fill sector cache */
+			if (m_diskio->read(fs->pdrv, fp->buf, nsect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);	/* Fill sector cache */
 #endif
 			fp->sect = nsect;
 		}
@@ -4150,7 +4154,7 @@ FRESULT ff::f_lseek (
 /* Create a Directory Object                                             */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_opendir (
+FRESULT Driver::f_opendir (
 	DIR* dp,			/* Pointer to directory object to create */
 	const TCHAR* path	/* Pointer to the directory path */
 )
@@ -4216,7 +4220,7 @@ FRESULT ff::f_opendir (
 /* Close Directory                                                       */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_closedir (
+FRESULT Driver::f_closedir (
 	DIR *dp		/* Pointer to the directory object to be closed */
 )
 {
@@ -4246,7 +4250,7 @@ FRESULT ff::f_closedir (
 /* Read Directory Entries in Sequence                                    */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_readdir (
+FRESULT Driver::f_readdir (
 	DIR* dp,			/* Pointer to the open directory object */
 	FILINFO* fno		/* Pointer to file information to return */
 )
@@ -4282,7 +4286,7 @@ FRESULT ff::f_readdir (
 /* Find Next File                                                        */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_findnext (
+FRESULT Driver::f_findnext (
 	DIR* dp,		/* Pointer to the open directory object */
 	FILINFO* fno	/* Pointer to the file information structure */
 )
@@ -4307,7 +4311,7 @@ FRESULT ff::f_findnext (
 /* Find First File                                                       */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_findfirst (
+FRESULT Driver::f_findfirst (
 	DIR* dp,				/* Pointer to the blank directory object */
 	FILINFO* fno,			/* Pointer to the file information structure */
 	const TCHAR* path,		/* Pointer to the directory to open */
@@ -4334,7 +4338,7 @@ FRESULT ff::f_findfirst (
 /* Get File Status                                                       */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_stat (
+FRESULT Driver::f_stat (
 	const TCHAR* path,	/* Pointer to the file path */
 	FILINFO* fno		/* Pointer to file information to return */
 )
@@ -4369,7 +4373,7 @@ FRESULT ff::f_stat (
 /* Get Number of Free Clusters                                           */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_getfree (
+FRESULT Driver::f_getfree (
 	const TCHAR* path,	/* Logical drive number */
 	DWORD* nclst,		/* Pointer to a variable to return number of free clusters */
 	FATFS** fatfs		/* Pointer to return pointer to corresponding filesystem object */
@@ -4461,7 +4465,7 @@ FRESULT ff::f_getfree (
 /* Truncate File                                                         */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_truncate (
+FRESULT Driver::f_truncate (
 	FIL* fp		/* Pointer to the file object */
 )
 {
@@ -4491,7 +4495,7 @@ FRESULT ff::f_truncate (
 		fp->flag |= FA_MODIFIED;
 #if !FF_FS_TINY
 		if (res == FR_OK && (fp->flag & FA_DIRTY)) {
-			if (Diskio::disk_write(fs->pdrv, fp->buf, fp->sect, 1) != Diskio::Diskio::DRESULT::RES_OK) {
+			if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) {
 				res = FR_DISK_ERR;
 			} else {
 				fp->flag &= (BYTE)~FA_DIRTY;
@@ -4511,7 +4515,7 @@ FRESULT ff::f_truncate (
 /* Delete a File/Directory                                               */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_unlink (
+FRESULT Driver::f_unlink (
 	const TCHAR* path		/* Pointer to the file or directory path */
 )
 {
@@ -4605,7 +4609,7 @@ FRESULT ff::f_unlink (
 /* Create a Directory                                                    */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_mkdir (
+FRESULT Driver::f_mkdir (
 	const TCHAR* path		/* Pointer to the directory path */
 )
 {
@@ -4638,7 +4642,7 @@ FRESULT ff::f_mkdir (
 				res = dir_clear(fs, dcl);		/* Clean up the new table */
 				if (res == FR_OK) {
 					if (!FF_FS_EXFAT || fs->fs_type != FS_EXFAT) {	/* Create dot entries (FAT only) */
-						memset(fs->win + DIR_Name, ' ', 11);	/* Create "." entry */
+						std::memset(fs->win + DIR_Name, ' ', 11);	/* Create "." entry */
 						fs->win[DIR_Name] = '.';
 						fs->win[DIR_Attr] = AM_DIR;
 						st_dword(fs->win + DIR_ModTime, tm);
@@ -4689,7 +4693,7 @@ FRESULT ff::f_mkdir (
 /* Rename a File/Directory                                               */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_rename (
+FRESULT Driver::f_rename (
 	const TCHAR* path_old,	/* Pointer to the object name to be renamed */
 	const TCHAR* path_new	/* Pointer to the new name */
 )
@@ -4799,7 +4803,7 @@ FRESULT ff::f_rename (
 /* Change Attribute                                                      */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_chmod (
+FRESULT Driver::f_chmod (
 	const TCHAR* path,	/* Pointer to the file path */
 	BYTE attr,			/* Attribute bits */
 	BYTE mask			/* Attribute mask to change */
@@ -4846,7 +4850,7 @@ FRESULT ff::f_chmod (
 /* Change Timestamp                                                      */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_utime (
+FRESULT Driver::f_utime (
 	const TCHAR* path,	/* Pointer to the file/directory name */
 	const FILINFO* fno	/* Pointer to the timestamp to be set */
 )
@@ -4893,7 +4897,7 @@ FRESULT ff::f_utime (
 /* Get Volume Label                                                      */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_getlabel (
+FRESULT Driver::f_getlabel (
 	const TCHAR* path,	/* Logical drive number */
 	TCHAR* label,		/* Buffer to store the volume label */
 	DWORD* vsn			/* Variable to store the volume serial number */
@@ -4990,7 +4994,7 @@ FRESULT ff::f_getlabel (
 /* Set Volume Label                                                      */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_setlabel (
+FRESULT Driver::f_setlabel (
 	const TCHAR* label	/* Volume label to set with heading logical drive number */
 )
 {
@@ -5011,7 +5015,7 @@ FRESULT ff::f_setlabel (
 
 #if FF_FS_EXFAT
 	if (fs->fs_type == FS_EXFAT) {	/* On the exFAT volume */
-		memset(dirvn, 0, 22);
+		std::memset(dirvn, 0, 22);
 		di = 0;
 		while ((UINT)*label >= ' ') {	/* Create volume label */
 			dc = tchar2uni(&label);	/* Get a Unicode character */
@@ -5030,7 +5034,7 @@ FRESULT ff::f_setlabel (
 	} else
 #endif
 	{	/* On the FAT/FAT32 volume */
-		memset(dirvn, ' ', 11);
+		std::memset(dirvn, ' ', 11);
 		di = 0;
 		while ((UINT)*label >= ' ') {	/* Create volume label */
 #if FF_USE_LFN
@@ -5080,7 +5084,7 @@ FRESULT ff::f_setlabel (
 				if (di != 0) {	/* Create a volume label entry */
 					res = dir_alloc(&dj, 1);	/* Allocate an entry */
 					if (res == FR_OK) {
-						memset(dj.dir, 0, SZDIRE);	/* Clean the entry */
+						std::memset(dj.dir, 0, SZDIRE);	/* Clean the entry */
 						if (FF_FS_EXFAT && fs->fs_type == FS_EXFAT) {
 							dj.dir[XDIR_Type] = ET_VLABEL;	/* Create volume label entry */
 							dj.dir[XDIR_NumLabel] = (BYTE)di;
@@ -5110,7 +5114,7 @@ FRESULT ff::f_setlabel (
 /* Allocate a Contiguous Blocks to the File                              */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_expand (
+FRESULT Driver::f_expand (
 	FIL* fp,		/* Pointer to the file object */
 	FSIZE_t fsz,	/* File size to be expanded to */
 	BYTE opt		/* Operation mode 0:Find and prepare or 1:Find and allocate */
@@ -5200,7 +5204,7 @@ FRESULT ff::f_expand (
 /* Forward Data to the Stream Directly                                   */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_forward (
+FRESULT Driver::f_forward (
 	FIL* fp, 						/* Pointer to the file object */
 	UINT (*func)(const BYTE*,UINT),	/* Pointer to the streaming function */
 	UINT btf,						/* Number of bytes to forward */
@@ -5245,11 +5249,11 @@ FRESULT ff::f_forward (
 		if (fp->sect != sect) {		/* Fill sector cache with file data */
 #if !FF_FS_READONLY
 			if (fp->flag & FA_DIRTY) {		/* Write-back dirty sector cache */
-				if (Diskio::disk_write(fs->pdrv, fp->buf, fp->sect, 1) != Diskio::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+				if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 				fp->flag &= (BYTE)~FA_DIRTY;
 			}
 #endif
-			if (Diskio::disk_read(fs->pdrv, fp->buf, sect, 1) != Diskio::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+			if (m_diskio->read(fs->pdrv, fp->buf, sect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 		}
 		dbuf = fp->buf;
 #endif
@@ -5278,7 +5282,7 @@ FRESULT ff::f_forward (
 
 /* Create partitions on the physical drive in format of MBR or GPT */
 
-FRESULT ff::create_partition (
+FRESULT Driver::create_partition (
 	BYTE drv,			/* Physical drive number */
 	const LBA_t plst[],	/* Partition list */
 	BYTE sys,			/* System ID (for only MBR, temp setting) */
@@ -5292,7 +5296,7 @@ FRESULT ff::create_partition (
 	BYTE hd, n_hd, sc, n_sc;
 
 	/* Get physical drive size */
-	if (Diskio::Diskio::disk_ioctl(drv, Diskio::GET_SECTOR_COUNT, &sz_drv) != Diskio::DRESULT::RES_OK) return FR_DISK_ERR;
+	if (m_diskio->ioctl(drv, DiskioBase::GET_SECTOR_COUNT, &sz_drv) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;
 
 #if FF_LBA64
 	if (sz_drv >= FF_MIN_GPT) {	/* Create partitions in GPT format */
@@ -5303,7 +5307,7 @@ FRESULT ff::create_partition (
 		static const BYTE gpt_mbr[16] = {0x00, 0x00, 0x02, 0x00, 0xEE, 0xFE, 0xFF, 0x00, 0x01, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
 
 #if FF_MAX_SS != FF_MIN_SS
-		if (Diskio::disk_ioctl(drv, GET_SECTOR_SIZE, &ss) != Diskio::DRESULT::RES_OK) return FR_DISK_ERR;	/* Get sector size */
+		if (m_diskio->ioctl(drv, GET_SECTOR_SIZE, &ss) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;	/* Get sector size */
 		if (ss > FF_MAX_SS || ss < FF_MIN_SS || (ss & (ss - 1))) return FR_DISK_ERR;
 #else
 		ss = FF_MAX_SS;
@@ -5317,7 +5321,7 @@ FRESULT ff::create_partition (
 		bcc = 0xFFFFFFFF; sz_part = 1;
 		pi = si = 0;	/* partition table index, size table index */
 		do {
-			if (pi * SZ_GPTE % ss == 0) memset(buf, 0, ss);	/* Clean the buffer if needed */
+			if (pi * SZ_GPTE % ss == 0) std::memset(buf, 0, ss);	/* Clean the buffer if needed */
 			if (sz_part != 0) {				/* Is the size table not termintated? */
 				nxt_alloc = (nxt_alloc + align - 1) & ((QWORD)0 - align);	/* Align partition start */
 				sz_part = plst[si++];		/* Get a partition size */
@@ -5339,13 +5343,13 @@ FRESULT ff::create_partition (
 			}
 			if ((pi + 1) * SZ_GPTE % ss == 0) {		/* Write the buffer if it is filled up */
 				for (i = 0; i < ss; bcc = crc32(bcc, buf[i++])) ;	/* Calculate table check sum */
-				if (Diskio::disk_write(drv, buf, 2 + pi * SZ_GPTE / ss, 1) != Diskio::DRESULT::RES_OK) return FR_DISK_ERR;		/* Write to primary table */
-				if (Diskio::disk_write(drv, buf, top_bpt + pi * SZ_GPTE / ss, 1) != Diskio::DRESULT::RES_OK) return FR_DISK_ERR;	/* Write to secondary table */
+				if (m_diskio->write(drv, buf, 2 + pi * SZ_GPTE / ss, 1) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;		/* Write to primary table */
+				if (m_diskio->write(drv, buf, top_bpt + pi * SZ_GPTE / ss, 1) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;	/* Write to secondary table */
 			}
 		} while (++pi < GPT_ITEMS);
 
 		/* Create primary GPT header */
-		memset(buf, 0, ss);
+		std::memset(buf, 0, ss);
 		memcpy(buf + GPTH_Sign, "EFI PART" "\0\0\1\0" "\x5C\0\0", 16);	/* Signature, version (1.0) and size (92) */
 		st_dword(buf + GPTH_PtBcc, ~bcc);			/* Table check sum */
 		st_qword(buf + GPTH_CurLba, 1);				/* LBA of this header */
@@ -5358,7 +5362,7 @@ FRESULT ff::create_partition (
 		rnd = make_rand(rnd, buf + GPTH_DskGuid, 16);	/* Disk GUID */
 		for (i = 0, bcc= 0xFFFFFFFF; i < 92; bcc = crc32(bcc, buf[i++])) ;	/* Calculate header check sum */
 		st_dword(buf + GPTH_Bcc, ~bcc);				/* Header check sum */
-		if (Diskio::disk_write(drv, buf, 1, 1) != Diskio::DRESULT::RES_OK) return FR_DISK_ERR;
+		if (m_diskio->write(drv, buf, 1, 1) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;
 
 		/* Create secondary GPT header */
 		st_qword(buf + GPTH_CurLba, sz_drv - 1);	/* LBA of this header */
@@ -5367,13 +5371,13 @@ FRESULT ff::create_partition (
 		st_dword(buf + GPTH_Bcc, 0);
 		for (i = 0, bcc= 0xFFFFFFFF; i < 92; bcc = crc32(bcc, buf[i++])) ;	/* Calculate header check sum */
 		st_dword(buf + GPTH_Bcc, ~bcc);				/* Header check sum */
-		if (Diskio::disk_write(drv, buf, sz_drv - 1, 1) != Diskio::DRESULT::RES_OK) return FR_DISK_ERR;
+		if (m_diskio->write(drv, buf, sz_drv - 1, 1) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;
 
 		/* Create protective MBR */
-		memset(buf, 0, ss);
+		std::memset(buf, 0, ss);
 		memcpy(buf + MBR_Table, gpt_mbr, 16);		/* Create a GPT partition */
 		st_word(buf + BS_55AA, 0xAA55);
-		if (Diskio::disk_write(drv, buf, 0, 1) != Diskio::DRESULT::RES_OK) return FR_DISK_ERR;
+		if (m_diskio->write(drv, buf, 0, 1) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;
 
 	} else
 #endif
@@ -5383,7 +5387,7 @@ FRESULT ff::create_partition (
 		for (n_hd = 8; n_hd != 0 && sz_drv32 / n_hd / n_sc > 1024; n_hd *= 2) ;
 		if (n_hd == 0) n_hd = 255;		/* Number of heads needs to be <256 */
 
-		memset(buf, 0, FF_MAX_SS);		/* Clear MBR */
+		std::memset(buf, 0, FF_MAX_SS);		/* Clear MBR */
 		pte = buf + MBR_Table;	/* Partition table in the MBR */
 		for (i = 0, nxt_alloc32 = n_sc; i < 4 && nxt_alloc32 != 0 && nxt_alloc32 < sz_drv32; i++, nxt_alloc32 += sz_part32) {
 			sz_part32 = (DWORD)plst[i];	/* Get partition size */
@@ -5413,7 +5417,7 @@ FRESULT ff::create_partition (
 		}
 
 		st_word(buf + BS_55AA, 0xAA55);		/* MBR signature */
-		if (Diskio::disk_write(drv, buf, 0, 1) != Diskio::DRESULT::RES_OK) return FR_DISK_ERR;	/* Write it to the MBR */
+		if (m_diskio->write(drv, buf, 0, 1) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;	/* Write it to the MBR */
 	}
 
 	return FR_OK;
@@ -5421,7 +5425,7 @@ FRESULT ff::create_partition (
 
 
 
-FRESULT ff::f_mkfs (
+FRESULT Driver::f_mkfs (
 	const TCHAR* path,		/* Logical drive number */
 	const MKFS_PARM* opt,	/* Format options */
 	void* work,				/* Pointer to working buffer (null: use heap memory) */
@@ -5439,7 +5443,7 @@ FRESULT ff::f_mkfs (
 	DWORD sz_rsv, sz_fat, sz_dir, sz_au;	/* Size of reserved, fat, dir, data, cluster */
 	UINT n_fat, n_root, i;					/* Index, Number of FATs and Number of roor dir entries */
 	int vol;
-	Diskio::DSTATUS ds;
+	DiskioBase::DSTATUS ds;
 	FRESULT fr;
 
 
@@ -5452,14 +5456,14 @@ FRESULT ff::f_mkfs (
 	if (!opt) opt = &defopt;	/* Use default parameter if it is not given */
 
 	/* Get physical drive status (sz_drv, sz_blk, ss) */
-	ds = Diskio::disk_initialize(pdrv);
-	if (ds & Diskio::STA_NOINIT) return FR_NOT_READY;
-	if (ds & Diskio::STA_PROTECT) return FR_WRITE_PROTECTED;
+	ds = m_diskio->initialize(pdrv);
+	if (ds & DiskioBase::STA_NOINIT) return FR_NOT_READY;
+	if (ds & DiskioBase::STA_PROTECT) return FR_WRITE_PROTECTED;
 	sz_blk = opt->align;
-	if (sz_blk == 0 && Diskio::Diskio::disk_ioctl(pdrv, Diskio::GET_BLOCK_SIZE, &sz_blk) != Diskio::DRESULT::RES_OK) sz_blk = 1;
+	if (sz_blk == 0 && m_diskio->ioctl(pdrv, DiskioBase::GET_BLOCK_SIZE, &sz_blk) != DiskioBase::DRESULT::RES_OK) sz_blk = 1;
  	if (sz_blk == 0 || sz_blk > 0x8000 || (sz_blk & (sz_blk - 1))) sz_blk = 1;
 #if FF_MAX_SS != FF_MIN_SS
-	if (Diskio::disk_ioctl(pdrv, GET_SECTOR_SIZE, &ss) != Diskio::DRESULT::RES_OK) return FR_DISK_ERR;
+	if (m_diskio->ioctl(pdrv, GET_SECTOR_SIZE, &ss) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;
 	if (ss > FF_MAX_SS || ss < FF_MIN_SS || (ss & (ss - 1))) return FR_DISK_ERR;
 #else
 	ss = FF_MAX_SS;
@@ -5484,7 +5488,7 @@ FRESULT ff::f_mkfs (
 	b_vol = sz_vol = 0;
 	if (FF_MULTI_PARTITION && ipart != 0) {	/* Is the volume associated with any specific partition? */
 		/* Get partition location from the existing partition table */
-		if (Diskio::disk_read(pdrv, buf, 0, 1) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Load MBR */
+		if (m_diskio->read(pdrv, buf, 0, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Load MBR */
 		if (ld_word(buf + BS_55AA) != 0xAA55) LEAVE_MKFS(FR_MKFS_ABORTED);	/* Check if MBR is valid */
 #if FF_LBA64
 		if (buf[MBR_Table + PTE_System] == 0xEE) {	/* GPT protective MBR? */
@@ -5492,13 +5496,13 @@ FRESULT ff::f_mkfs (
 			QWORD pt_lba;
 
 			/* Get the partition location from GPT */
-			if (Diskio::disk_read(pdrv, buf, 1, 1) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Load GPT header sector (next to MBR) */
+			if (m_diskio->read(pdrv, buf, 1, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Load GPT header sector (next to MBR) */
 			if (!test_gpt_header(buf)) LEAVE_MKFS(FR_MKFS_ABORTED);	/* Check if GPT header is valid */
 			n_ent = ld_dword(buf + GPTH_PtNum);		/* Number of entries */
 			pt_lba = ld_qword(buf + GPTH_PtOfs);	/* Table start sector */
 			ofs = i = 0;
 			while (n_ent) {		/* Find MS Basic partition with order of ipart */
-				if (ofs == 0 && Diskio::disk_read(pdrv, buf, pt_lba++, 1) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Get PT sector */
+				if (ofs == 0 && m_diskio->read(pdrv, buf, pt_lba++, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Get PT sector */
 				if (!memcmp(buf + ofs + GPTE_PtGuid, GUID_MS_Basic, 16) && ++i == ipart) {	/* MS basic data partition? */
 					b_vol = ld_qword(buf + ofs + GPTE_FstLba);
 					sz_vol = ld_qword(buf + ofs + GPTE_LstLba) - b_vol + 1;
@@ -5517,7 +5521,7 @@ FRESULT ff::f_mkfs (
 			sz_vol = ld_dword(pte + PTE_SizLba);	/* Get volume size */
 		}
 	} else {	/* The volume is associated with a physical drive */
-		if (Diskio::Diskio::disk_ioctl(pdrv, Diskio::GET_SECTOR_COUNT, &sz_vol) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+		if (m_diskio->ioctl(pdrv, DiskioBase::GET_SECTOR_COUNT, &sz_vol) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 		if (!(fsopt & FM_SFD)) {	/* To be partitioned? */
 			/* Create a single-partition on the drive in this function */
 #if FF_LBA64
@@ -5567,7 +5571,7 @@ FRESULT ff::f_mkfs (
 		if (sz_vol < 0x1000) LEAVE_MKFS(FR_MKFS_ABORTED);	/* Too small volume for exFAT? */
 #if FF_USE_TRIM
 		lba[0] = b_vol; lba[1] = b_vol + sz_vol - 1;	/* Inform storage device that the volume area may be erased */
-		Diskio::disk_ioctl(pdrv, Diskio::CTRL_TRIM, lba);
+		m_diskio->ioctl(pdrv, DiskioBase::CTRL_TRIM, lba);
 #endif
 		/* Determine FAT location, data location and number of clusters */
 		if (sz_au == 0) {	/* AU auto-selection */
@@ -5617,7 +5621,7 @@ FRESULT ff::f_mkfs (
 			i += 2; szb_case += 2;
 			if (si == 0 || i == sz_buf * ss) {		/* Write buffered data when buffer full or end of process */
 				n = (i + ss - 1) / ss;
-				if (Diskio::disk_write(pdrv, buf, sect, n) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+				if (m_diskio->write(pdrv, buf, sect, n) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 				sect += n; i = 0;
 			}
 		} while (si);
@@ -5628,10 +5632,10 @@ FRESULT ff::f_mkfs (
 		sect = b_data; nsect = (szb_bit + ss - 1) / ss;	/* Start of bitmap and number of bitmap sectors */
 		nbit = clen[0] + clen[1] + clen[2];				/* Number of clusters in-use by system (bitmap, up-case and root-dir) */
 		do {
-			memset(buf, 0, sz_buf * ss);				/* Initialize bitmap buffer */
+			std::memset(buf, 0, sz_buf * ss);				/* Initialize bitmap buffer */
 			for (i = 0; nbit != 0 && i / 8 < sz_buf * ss; buf[i / 8] |= 1 << (i % 8), i++, nbit--) ;	/* Mark used clusters */
 			n = (nsect > sz_buf) ? sz_buf : nsect;		/* Write the buffered data */
-			if (Diskio::disk_write(pdrv, buf, sect, n) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+			if (m_diskio->write(pdrv, buf, sect, n) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			sect += n; nsect -= n;
 		} while (nsect);
 
@@ -5639,7 +5643,7 @@ FRESULT ff::f_mkfs (
 		sect = b_fat; nsect = sz_fat;	/* Start of FAT and number of FAT sectors */
 		j = nbit = clu = 0;
 		do {
-			memset(buf, 0, sz_buf * ss); i = 0;	/* Clear work area and reset write offset */
+			std::memset(buf, 0, sz_buf * ss); i = 0;	/* Clear work area and reset write offset */
 			if (clu == 0) {	/* Initialize FAT [0] and FAT[1] */
 				st_dword(buf + i, 0xFFFFFFF8); i += 4; clu++;
 				st_dword(buf + i, 0xFFFFFFFF); i += 4; clu++;
@@ -5652,12 +5656,12 @@ FRESULT ff::f_mkfs (
 				if (nbit == 0 && j < 3) nbit = clen[j++];	/* Get next chain length */
 			} while (nbit != 0 && i < sz_buf * ss);
 			n = (nsect > sz_buf) ? sz_buf : nsect;	/* Write the buffered data */
-			if (Diskio::disk_write(pdrv, buf, sect, n) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+			if (m_diskio->write(pdrv, buf, sect, n) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			sect += n; nsect -= n;
 		} while (nsect);
 
 		/* Initialize the root directory */
-		memset(buf, 0, sz_buf * ss);
+		std::memset(buf, 0, sz_buf * ss);
 		buf[SZDIRE * 0 + 0] = ET_VLABEL;				/* Volume label entry (no label) */
 		buf[SZDIRE * 1 + 0] = ET_BITMAP;				/* Bitmap entry */
 		st_dword(buf + SZDIRE * 1 + 20, 2);				/*  cluster */
@@ -5669,8 +5673,8 @@ FRESULT ff::f_mkfs (
 		sect = b_data + sz_au * (clen[0] + clen[1]); nsect = sz_au;	/* Start of the root directory and number of sectors */
 		do {	/* Fill root directory sectors */
 			n = (nsect > sz_buf) ? sz_buf : nsect;
-			if (Diskio::disk_write(pdrv, buf, sect, n) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
-			memset(buf, 0, ss);	/* Rest of entries are filled with zero */
+			if (m_diskio->write(pdrv, buf, sect, n) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+			std::memset(buf, 0, ss);	/* Rest of entries are filled with zero */
 			sect += n; nsect -= n;
 		} while (nsect);
 
@@ -5678,7 +5682,7 @@ FRESULT ff::f_mkfs (
 		sect = b_vol;
 		for (n = 0; n < 2; n++) {
 			/* Main record (+0) */
-			memset(buf, 0, ss);
+			std::memset(buf, 0, ss);
 			memcpy(buf + BS_JmpBoot, "\xEB\x76\x90" "EXFAT   ", 11);	/* Boot jump code (x86), OEM name */
 			st_qword(buf + BPB_VolOfsEx, b_vol);					/* Volume offset in the physical drive [sector] */
 			st_qword(buf + BPB_TotSecEx, sz_vol);					/* Volume size [sector] */
@@ -5698,23 +5702,23 @@ FRESULT ff::f_mkfs (
 			for (i = sum = 0; i < ss; i++) {		/* VBR checksum */
 				if (i != BPB_VolFlagEx && i != BPB_VolFlagEx + 1 && i != BPB_PercInUseEx) sum = xsum32(buf[i], sum);
 			}
-			if (Diskio::disk_write(pdrv, buf, sect++, 1) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+			if (m_diskio->write(pdrv, buf, sect++, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			/* Extended bootstrap record (+1..+8) */
-			memset(buf, 0, ss);
+			std::memset(buf, 0, ss);
 			st_word(buf + ss - 2, 0xAA55);	/* Signature (placed at end of sector) */
 			for (j = 1; j < 9; j++) {
 				for (i = 0; i < ss; sum = xsum32(buf[i++], sum)) ;	/* VBR checksum */
-				if (Diskio::disk_write(pdrv, buf, sect++, 1) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+				if (m_diskio->write(pdrv, buf, sect++, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			}
 			/* OEM/Reserved record (+9..+10) */
-			memset(buf, 0, ss);
+			std::memset(buf, 0, ss);
 			for ( ; j < 11; j++) {
 				for (i = 0; i < ss; sum = xsum32(buf[i++], sum)) ;	/* VBR checksum */
-				if (Diskio::disk_write(pdrv, buf, sect++, 1) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+				if (m_diskio->write(pdrv, buf, sect++, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			}
 			/* Sum record (+11) */
 			for (i = 0; i < ss; i += 4) st_dword(buf + i, sum);		/* Fill with checksum value */
-			if (Diskio::disk_write(pdrv, buf, sect++, 1) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+			if (m_diskio->write(pdrv, buf, sect++, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 		}
 
 	} else
@@ -5796,10 +5800,10 @@ FRESULT ff::f_mkfs (
 
 #if FF_USE_TRIM
 		lba[0] = b_vol; lba[1] = b_vol + sz_vol - 1;	/* Inform storage device that the volume area may be erased */
-		Diskio::disk_ioctl(pdrv, Diskio::CTRL_TRIM, lba);
+		m_diskio->ioctl(pdrv, DiskioBase::CTRL_TRIM, lba);
 #endif
 		/* Create FAT VBR */
-		memset(buf, 0, ss);
+		std::memset(buf, 0, ss);
 		memcpy(buf + BS_JmpBoot, "\xEB\xFE\x90" "MSDOS5.0", 11);	/* Boot jump code (x86), OEM name */
 		st_word(buf + BPB_BytsPerSec, ss);				/* Sector size [byte] */
 		buf[BPB_SecPerClus] = (BYTE)pau;				/* Cluster size [sector] */
@@ -5832,23 +5836,23 @@ FRESULT ff::f_mkfs (
 			memcpy(buf + BS_VolLab, "NO NAME    " "FAT     ", 19);	/* Volume label, FAT signature */
 		}
 		st_word(buf + BS_55AA, 0xAA55);					/* Signature (offset is fixed here regardless of sector size) */
-		if (Diskio::disk_write(pdrv, buf, b_vol, 1) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Write it to the VBR sector */
+		if (m_diskio->write(pdrv, buf, b_vol, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Write it to the VBR sector */
 
 		/* Create FSINFO record if needed */
 		if (fsty == FS_FAT32) {
-			Diskio::disk_write(pdrv, buf, b_vol + 6, 1);		/* Write backup VBR (VBR + 6) */
-			memset(buf, 0, ss);
+			m_diskio->write(pdrv, buf, b_vol + 6, 1);		/* Write backup VBR (VBR + 6) */
+			std::memset(buf, 0, ss);
 			st_dword(buf + FSI_LeadSig, 0x41615252);
 			st_dword(buf + FSI_StrucSig, 0x61417272);
 			st_dword(buf + FSI_Free_Count, n_clst - 1);	/* Number of free clusters */
 			st_dword(buf + FSI_Nxt_Free, 2);			/* Last allocated cluster# */
 			st_word(buf + BS_55AA, 0xAA55);
-			Diskio::disk_write(pdrv, buf, b_vol + 7, 1);		/* Write backup FSINFO (VBR + 7) */
-			Diskio::disk_write(pdrv, buf, b_vol + 1, 1);		/* Write original FSINFO (VBR + 1) */
+			m_diskio->write(pdrv, buf, b_vol + 7, 1);		/* Write backup FSINFO (VBR + 7) */
+			m_diskio->write(pdrv, buf, b_vol + 1, 1);		/* Write original FSINFO (VBR + 1) */
 		}
 
 		/* Initialize FAT area */
-		memset(buf, 0, sz_buf * ss);
+		std::memset(buf, 0, sz_buf * ss);
 		sect = b_fat;		/* FAT start sector */
 		for (i = 0; i < n_fat; i++) {			/* Initialize FATs each */
 			if (fsty == FS_FAT32) {
@@ -5861,8 +5865,8 @@ FRESULT ff::f_mkfs (
 			nsect = sz_fat;		/* Number of FAT sectors */
 			do {	/* Fill FAT sectors */
 				n = (nsect > sz_buf) ? sz_buf : nsect;
-				if (Diskio::disk_write(pdrv, buf, sect, (UINT)n) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
-				memset(buf, 0, ss);	/* Rest of FAT all are cleared */
+				if (m_diskio->write(pdrv, buf, sect, (UINT)n) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+				std::memset(buf, 0, ss);	/* Rest of FAT all are cleared */
 				sect += n; nsect -= n;
 			} while (nsect);
 		}
@@ -5871,7 +5875,7 @@ FRESULT ff::f_mkfs (
 		nsect = (fsty == FS_FAT32) ? pau : sz_dir;	/* Number of root directory sectors */
 		do {
 			n = (nsect > sz_buf) ? sz_buf : nsect;
-			if (Diskio::disk_write(pdrv, buf, sect, (UINT)n) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+			if (m_diskio->write(pdrv, buf, sect, (UINT)n) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			sect += n; nsect -= n;
 		} while (nsect);
 	}
@@ -5897,9 +5901,9 @@ FRESULT ff::f_mkfs (
 	if (FF_MULTI_PARTITION && ipart != 0) {	/* Volume is in the existing partition */
 		if (!FF_LBA64 || !(fsopt & 0x80)) {
 			/* Update system ID in the partition table */
-			if (Diskio::disk_read(pdrv, buf, 0, 1) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Read the MBR */
+			if (m_diskio->read(pdrv, buf, 0, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Read the MBR */
 			buf[MBR_Table + (ipart - 1) * SZ_PTE + PTE_System] = sys;			/* Set system ID */
-			if (Diskio::disk_write(pdrv, buf, 0, 1) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Write it back to the MBR */
+			if (m_diskio->write(pdrv, buf, 0, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Write it back to the MBR */
 		}
 	} else {								/* Volume as a new single partition */
 		if (!(fsopt & FM_SFD)) {			/* Create partition table if not in SFD */
@@ -5909,7 +5913,7 @@ FRESULT ff::f_mkfs (
 		}
 	}
 
-	if (Diskio::Diskio::disk_ioctl(pdrv, Diskio::CTRL_SYNC, 0) != Diskio::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+	if (m_diskio->ioctl(pdrv, DiskioBase::CTRL_SYNC, 0) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 
 	LEAVE_MKFS(FR_OK);
 }
@@ -5922,19 +5926,19 @@ FRESULT ff::f_mkfs (
 /* Create Partition Table on the Physical Drive                          */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_fdisk (
+FRESULT Driver::f_fdisk (
 	BYTE pdrv,			/* Physical drive number */
 	const LBA_t ptbl[],	/* Pointer to the size table for each partitions */
 	void* work			/* Pointer to the working buffer (null: use heap memory) */
 )
 {
 	BYTE *buf = (BYTE*)work;
-	Diskio::DSTATUS stat;
+	DiskioBase::DSTATUS stat;
 
 
-	stat = Diskio::disk_initialize(pdrv);
-	if (stat & Diskio::STA_NOINIT) return FR_NOT_READY;
-	if (stat & Diskio::STA_PROTECT) return FR_WRITE_PROTECTED;
+	stat = m_diskio->initialize(pdrv);
+	if (stat & DiskioBase::STA_NOINIT) return FR_NOT_READY;
+	if (stat & DiskioBase::STA_PROTECT) return FR_WRITE_PROTECTED;
 #if FF_USE_LFN == 3
 	if (!buf) buf = ff_memalloc(FF_MAX_SS);	/* Use heap memory for working buffer */
 #endif
@@ -5957,7 +5961,7 @@ FRESULT ff::f_fdisk (
 /* Get a String from the File                                            */
 /*-----------------------------------------------------------------------*/
 
-TCHAR* ff::f_gets (
+TCHAR* Driver::f_gets (
 	TCHAR* buff,	/* Pointer to the buffer to store read string */
 	int len,		/* Size of string buffer (items) */
 	FIL* fp			/* Pointer to the file object */
@@ -6107,7 +6111,7 @@ TCHAR* ff::f_gets (
 
 /* Buffered file write with code conversion */
 
-void ff::putc_bfd (putbuff* pb, TCHAR c)
+void Driver::putc_bfd (putbuff* pb, TCHAR c)
 {
 	UINT n;
 	int i, nc;
@@ -6238,7 +6242,7 @@ void ff::putc_bfd (putbuff* pb, TCHAR c)
 
 /* Flush remaining characters in the buffer */
 
-int ff::putc_flush (putbuff* pb)
+int Driver::putc_flush (putbuff* pb)
 {
 	UINT nw;
 
@@ -6251,15 +6255,15 @@ int ff::putc_flush (putbuff* pb)
 
 /* Initialize write buffer */
 
-void ff::putc_init (putbuff* pb, FIL* fp)
+void Driver::putc_init (putbuff* pb, FIL* fp)
 {
-	memset(pb, 0, sizeof (putbuff));
+	std::memset(pb, 0, sizeof (putbuff));
 	pb->fp = fp;
 }
 
 
 
-int ff::f_putc (
+int Driver::f_putc (
 	TCHAR c,	/* A character to be output */
 	FIL* fp		/* Pointer to the file object */
 )
@@ -6279,7 +6283,7 @@ int ff::f_putc (
 /* Put a String to the File                                              */
 /*-----------------------------------------------------------------------*/
 
-int ff::f_puts (
+int Driver::f_puts (
 	const TCHAR* str,	/* Pointer to the string to be output */
 	FIL* fp				/* Pointer to the file object */
 )
@@ -6301,7 +6305,7 @@ int ff::f_puts (
 #if FF_PRINT_FLOAT && FF_INTDEF == 2
 
 
-int ff::ilog10 (double n)	/* Calculate log10(n) in integer output */
+int Driver::ilog10 (double n)	/* Calculate log10(n) in integer output */
 {
 	int rv = 0;
 
@@ -6323,7 +6327,7 @@ int ff::ilog10 (double n)	/* Calculate log10(n) in integer output */
 }
 
 
-double ff::i10x (int n)	/* Calculate 10^n in integer input */
+double Driver::i10x (int n)	/* Calculate 10^n in integer input */
 {
 	double rv = 1;
 
@@ -6345,13 +6349,13 @@ double ff::i10x (int n)	/* Calculate 10^n in integer input */
 }
 
 // https://isocpp.org/wiki/faq/newbie#floating-point-arith
-bool ff::isEqual(double x, double y)
+bool Driver::isEqual(double x, double y)
 {
   return std::abs(x - y) <= std::numeric_limits<double>::epsilon() * std::abs(x);
   // see Knuth section 4.2.2 pages 217-218
 }
 
-void ff::ftoa (
+void Driver::ftoa (
 	char* buf,	/* Buffer to output the floating point string */
 	double val,	/* Value to output */
 	int prec,	/* Number of fractional digits */
@@ -6426,7 +6430,7 @@ void ff::ftoa (
 
 
 
-int ff::f_printf (
+int Driver::f_printf (
 	FIL* fp,			/* Pointer to the file object */
 	const TCHAR* fmt,	/* Pointer to the format string */
 	...					/* Optional arguments... */
@@ -6584,7 +6588,7 @@ int ff::f_printf (
 /* Set Active Codepage for the Path Name                                 */
 /*-----------------------------------------------------------------------*/
 
-FRESULT ff::f_setcp (
+FRESULT Driver::f_setcp (
 	WORD cp		/* Value to be set as active code page */
 )
 {

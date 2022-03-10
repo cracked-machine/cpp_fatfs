@@ -41,16 +41,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef __DISKIO_HPP__
-#define __DISKIO_HPP__
+#ifndef __DISKIO_MMC_HPP__
+#define __DISKIO_MMC_HPP__
 
-#include <diskio_usb.hpp>
-#include <diskio_mmc.hpp>
+#include <ff.hpp>
 
 namespace fatfs {
 
+class DiskioMMC : public DiskioBase
+{
+public:
+    DiskioMMC() = default;
 
+    DSTATUS initialize(BYTE pdrv) override;
+    DSTATUS status(BYTE pdrv) override;
+    DRESULT read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count) override;
+    DRESULT write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count) override;
+    DRESULT ioctl (BYTE pdrv, BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]]) override;
 
-} // namespace fatfs
+private:
+};
 
-#endif // __DISKIO_HPP__
+} // namespace fatfs 
+
+#endif // __DISKIO_MMC_HPP__

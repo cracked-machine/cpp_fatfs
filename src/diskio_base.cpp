@@ -41,35 +41,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <diskio.hpp>
+#include <diskio_base.hpp>
 
 
 
 namespace fatfs {
 
-Diskio::DSTATUS Diskio::disk_initialize(BYTE pdrv [[maybe_unused]]) 
+DiskioBase::DSTATUS DiskioBase::initialize(BYTE pdrv [[maybe_unused]]) 
 {
     DSTATUS res = 0;
     return res;
 }
 
-Diskio::DSTATUS Diskio::disk_status(BYTE pdrv [[maybe_unused]]) 
+DiskioBase::DSTATUS DiskioBase::status(BYTE pdrv [[maybe_unused]]) 
 {
     DSTATUS res = 0;
     return res;
 }
 
-Diskio::DRESULT Diskio::disk_read(BYTE pdrv [[maybe_unused]], BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
+DiskioBase::DRESULT DiskioBase::read(BYTE pdrv [[maybe_unused]], BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
 {
     return DRESULT::RES_OK;
 }
 
-Diskio::DRESULT Diskio::disk_write(BYTE pdrv [[maybe_unused]], const BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
+DiskioBase::DRESULT DiskioBase::write(BYTE pdrv [[maybe_unused]], const BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
 {
     return DRESULT::RES_OK;
 }
 
-Diskio::DRESULT Diskio::disk_ioctl (BYTE pdrv [[maybe_unused]], BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]])
+DiskioBase::DRESULT DiskioBase::ioctl (BYTE pdrv [[maybe_unused]], BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]])
 {
     return DRESULT::RES_OK;
 }

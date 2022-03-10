@@ -15243,7 +15243,7 @@ static const WCHAR uc869[] = {	/*  CP869(Greek 2) to Unicode conversion table */
 /*------------------------------------------------------------------------*/
 
 #if FF_CODE_PAGE != 0 && FF_CODE_PAGE < 900
-WCHAR ff::f_uni2oem (	/* Returns OEM code character, zero on error */
+WCHAR Driver::f_uni2oem (	/* Returns OEM code character, zero on error */
 	DWORD	uni,	/* UTF-16 encoded character to be converted */
 	WORD	cp		/* Code page for the conversion */
 )
@@ -15265,7 +15265,7 @@ WCHAR ff::f_uni2oem (	/* Returns OEM code character, zero on error */
 	return c;
 }
 
-WCHAR ff::f_oem2uni (	/* Returns Unicode character in UTF-16, zero on error */
+WCHAR Driver::f_oem2uni (	/* Returns Unicode character in UTF-16, zero on error */
 	WCHAR	oem,	/* OEM code to be converted */
 	WORD	cp		/* Code page for the conversion */
 )
@@ -15296,7 +15296,7 @@ WCHAR ff::f_oem2uni (	/* Returns Unicode character in UTF-16, zero on error */
 /*------------------------------------------------------------------------*/
 
 #if FF_CODE_PAGE >= 900
-WCHAR ff::f_uni2oem (	/* Returns OEM code character, zero on error */
+WCHAR Driver::f_uni2oem (	/* Returns OEM code character, zero on error */
 	DWORD	uni,	/* UTF-16 encoded character to be converted */
 	WORD	cp		/* Code page for the conversion */
 )
@@ -15332,7 +15332,7 @@ WCHAR ff::f_uni2oem (	/* Returns OEM code character, zero on error */
 }
 
 
-WCHAR ff::f_oem2uni (	/* Returns Unicode character in UTF-16, zero on error */
+WCHAR Driver::f_oem2uni (	/* Returns Unicode character in UTF-16, zero on error */
 	WCHAR	oem,	/* OEM code to be converted */
 	WORD	cp		/* Code page for the conversion */
 )
@@ -15379,7 +15379,7 @@ static const WORD cp_code[]          = {  437,   720,   737,   771,   775,   850
 static const WCHAR* const cp_table[] = {uc437, uc720, uc737, uc771, uc775, uc850, uc852, uc855, uc857, uc860, uc861, uc862, uc863, uc864, uc865, uc866, uc869, 0};
 
 
-WCHAR ff::f_uni2oem (	/* Returns OEM code character, zero on error */
+WCHAR Driver::f_uni2oem (	/* Returns OEM code character, zero on error */
 	DWORD	uni,	/* UTF-16 encoded character to be converted */
 	WORD	cp		/* Code page for the conversion */
 )
@@ -15431,7 +15431,7 @@ WCHAR ff::f_uni2oem (	/* Returns OEM code character, zero on error */
 }
 
 
-WCHAR ff::f_oem2uni (	/* Returns Unicode character in UTF-16, zero on error */
+WCHAR Driver::f_oem2uni (	/* Returns Unicode character in UTF-16, zero on error */
 	WCHAR	oem,	/* OEM code to be converted (DBC if >=0x100) */
 	WORD	cp		/* Code page for the conversion */
 )
@@ -15485,7 +15485,7 @@ WCHAR ff::f_oem2uni (	/* Returns Unicode character in UTF-16, zero on error */
 /* Unicode up-case conversion                                             */
 /*------------------------------------------------------------------------*/
 
-DWORD ff::f_wtoupper (	/* Returns up-converted code point */
+DWORD Driver::f_wtoupper (	/* Returns up-converted code point */
 	DWORD uni		/* Unicode code point to be up-converted */
 )
 {

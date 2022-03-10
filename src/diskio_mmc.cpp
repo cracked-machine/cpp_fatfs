@@ -41,16 +41,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef __DISKIO_HPP__
-#define __DISKIO_HPP__
-
-#include <diskio_usb.hpp>
 #include <diskio_mmc.hpp>
+
 
 namespace fatfs {
 
+DiskioMMC::DSTATUS DiskioMMC::initialize(BYTE pdrv [[maybe_unused]]) 
+{
+    DSTATUS res = 0;
+    return res;
+}
+
+DiskioMMC::DSTATUS DiskioMMC::status(BYTE pdrv [[maybe_unused]]) 
+{
+    DSTATUS res = 0;
+    return res;
+}
+
+DiskioMMC::DRESULT DiskioMMC::read(BYTE pdrv [[maybe_unused]], BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
+{
+    return DRESULT::RES_OK;
+}
+
+DiskioMMC::DRESULT DiskioMMC::write(BYTE pdrv [[maybe_unused]], const BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
+{
+    return DRESULT::RES_OK;
+}
+
+DiskioMMC::DRESULT DiskioMMC::ioctl (BYTE pdrv [[maybe_unused]], BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]])
+{
+    return DRESULT::RES_OK;
+}
 
 
-} // namespace fatfs
-
-#endif // __DISKIO_HPP__
+} // namespace fatfs 
