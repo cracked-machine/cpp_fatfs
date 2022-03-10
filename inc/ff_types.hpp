@@ -116,7 +116,7 @@ extern const char* VolumeStr[FF_VOLUMES];	/* User defied volume ID */
 
 
 
-
+static constexpr uint8_t SZDIRE			  =	32;		/* Size of a directory entry */
 
 /* Filesystem object structure (FATFS) */
 

@@ -46,6 +46,7 @@
 #include <diskio_usb.hpp>
 #include <diskio_mmc.hpp>
 #include <memory>
+#include <type_traits>
 
 #ifndef FF_DEFINED
 #define FF_DEFINED	86631	/* Revision ID */
@@ -53,11 +54,17 @@
 
 namespace fatfs {
 
+
+
+
 class Driver {
 
 public:
 
-	Driver(const DiskioType dtype); 
+	Driver() = default; 
+
+	template<typename IOTYPE>
+	void init(IOTYPE &dtype);
 
 	/* File access mode and open method flags (3rd argument of f_open) */
 	static constexpr uint8_t FA_READ		  =	0x01;
@@ -78,7 +85,7 @@ public:
 	static constexpr uint8_t FM_ANY		      = 0x07;
 	static constexpr uint8_t FM_SFD			  = 0x08;	
 
-	static constexpr uint8_t SZDIRE			  =	32;		/* Size of a directory entry */
+
 
 	FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode);				/* Open or create a file */
 	FRESULT f_close (FIL* fp);											/* Close an open file object */
@@ -1010,7 +1017,24 @@ private:
 
 };
 
+template<typename IOTYPE>
+void Driver::init(IOTYPE &dtype)
+{
+	// initialize m_diskio (std::unique_ptr)
+	if (std::is_same_v<IOTYPE, DiskioMMC>)
+	{
+		m_diskio = std::unique_ptr<DiskioMMC>(&dtype);
+	}
+	else
+	{
+		// non-MMC types not implemented...yet
+		while(true);
+	}	
+}
+
 } // namespace fatfs
+
+
 
 
 #endif /* FF_DEFINED */

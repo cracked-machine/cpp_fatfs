@@ -137,7 +137,7 @@ static const BYTE GUID_MS_Basic[16] = {0xA2,0xA0,0xD0,0xEB,0xE5,0xB9,0x33,0x44,0
 #error Wrong setting of FF_LFN_UNICODE
 #endif
 static const BYTE LfnOfs[] = {1,3,5,7,9,14,16,18,20,22,24,28,30};	/* FAT: Offset of LFN characters in the directory entry */
-#define MAXDIRB(nc)	((nc + 44U) / 15 * Driver::SZDIRE)	/* exFAT: Size of directory entry block scratchpad buffer needed for the name length */
+#define MAXDIRB(nc)	((nc + 44U) / 15 * SZDIRE)	/* exFAT: Size of directory entry block scratchpad buffer needed for the name length */
 
 #if FF_USE_LFN == 1		/* LFN enabled with static working buffer */
 #if FF_FS_EXFAT
@@ -223,21 +223,9 @@ static const BYTE DbcTbl[] = MKCVTBL(TBL_DC, FF_CODE_PAGE);
 
 #endif
 
-Driver::Driver(const DiskioType dtype) 
-{
-	// initialize m_diskio (std::unique_ptr)
-	switch(dtype)
-	{
-		case DiskioType::MMC:
-			m_diskio = std::make_unique<DiskioMMC>();
-		break;
-		default:
-			while(true);
-			// non-MMC types not implemented...yet
-		break;		
-	}
 
-}
+
+
 
 
 /*--------------------------------------------------------------------------

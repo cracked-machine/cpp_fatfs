@@ -44,6 +44,7 @@
 #define __DISKIO_BASE_HPP__
 
 #include <ff_types.hpp>	
+#include <fatfs_spi_device.hpp>
 
 namespace fatfs {
 

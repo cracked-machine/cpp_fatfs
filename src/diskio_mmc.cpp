@@ -46,6 +46,53 @@
 
 namespace fatfs {
 
+DiskioMMC::DiskioMMC(DriverInterfaceSPI &spi_interface)
+:
+    m_spi_interface(spi_interface)
+{
+
+}
+
+void DiskioMMC::spi_init()
+{
+    #if not defined(X86_UNIT_TESTING_ONLY)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wvolatile" 
+        // Enable GPIO (SPI_MOSI)
+        LL_GPIO_SetPinSpeed(m_spi_interface.get_mosi_port(), m_spi_interface.get_mosi_pin(), GPIO_OSPEEDR_OSPEED0);
+        LL_GPIO_SetPinOutputType(m_spi_interface.get_mosi_port(), m_spi_interface.get_mosi_pin(), LL_GPIO_OUTPUT_PUSHPULL);
+        LL_GPIO_SetPinPull(m_spi_interface.get_mosi_port(), m_spi_interface.get_mosi_pin(), LL_GPIO_PULL_DOWN);
+        LL_GPIO_SetAFPin_0_7(m_spi_interface.get_mosi_port(), m_spi_interface.get_mosi_pin(), LL_GPIO_AF_1);
+        LL_GPIO_SetPinMode(m_spi_interface.get_mosi_port(), m_spi_interface.get_mosi_pin(), LL_GPIO_MODE_ALTERNATE);
+
+        // Enable GPIO (SPI_MISO)
+        LL_GPIO_SetPinSpeed(m_spi_interface.get_miso_port(), m_spi_interface.get_miso_pin(), GPIO_OSPEEDR_OSPEED0);
+        LL_GPIO_SetPinOutputType(m_spi_interface.get_miso_port(), m_spi_interface.get_miso_pin(), LL_GPIO_OUTPUT_PUSHPULL);
+        LL_GPIO_SetPinPull(m_spi_interface.get_miso_port(), m_spi_interface.get_miso_pin(), LL_GPIO_PULL_DOWN);
+        LL_GPIO_SetAFPin_0_7(m_spi_interface.get_miso_port(), m_spi_interface.get_miso_pin(), LL_GPIO_AF_1);
+        LL_GPIO_SetPinMode(m_spi_interface.get_miso_port(), m_spi_interface.get_miso_pin(), LL_GPIO_MODE_ALTERNATE);
+
+
+        // Enable GPIO (SPI_SCK)
+        LL_GPIO_SetPinSpeed(m_spi_interface.get_sck_port(), m_spi_interface.get_sck_pin(), LL_GPIO_SPEED_FREQ_VERY_HIGH);
+        LL_GPIO_SetPinOutputType(m_spi_interface.get_sck_port(), m_spi_interface.get_sck_pin(), LL_GPIO_OUTPUT_PUSHPULL);
+        LL_GPIO_SetPinPull(m_spi_interface.get_sck_port(), m_spi_interface.get_sck_pin(), LL_GPIO_PULL_DOWN);
+        LL_GPIO_SetAFPin_8_15(m_spi_interface.get_sck_port(), m_spi_interface.get_sck_pin(), LL_GPIO_AF_1);
+        LL_GPIO_SetPinMode(m_spi_interface.get_sck_port(), m_spi_interface.get_sck_pin(), LL_GPIO_MODE_ALTERNATE);        
+
+        m_spi_interface.get_spi_handle()->CR1 = 0;
+        m_spi_interface.get_spi_handle()->CR1 |=    
+            ((SPI_CR1_BIDIMODE | SPI_CR1_BIDIOE) | (SPI_CR1_MSTR | SPI_CR1_SSI) | SPI_CR1_SSM | SPI_CR1_BR_1);
+
+        CLEAR_BIT(m_spi_interface.get_spi_handle()->CR2, SPI_CR2_NSSP);
+
+               
+
+    #pragma GCC diagnostic pop  // ignored "-Wvolatile"  
+    #endif // not X86_UNIT_TESTING_ONLY
+
+}    
+
 DiskioMMC::DSTATUS DiskioMMC::initialize(BYTE pdrv [[maybe_unused]]) 
 {
     DSTATUS res = 0;

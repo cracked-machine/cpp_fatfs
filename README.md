@@ -3,7 +3,22 @@ A C++ port of the fatfs library
 
 ### Architecture
 
+The main architecture consists of a public API that uses a lower level disk IO layer. 
+
 ![](doc/cpp_fatfs-BlockDiagram.png)
+
+Details of the STM32 SPI interface (SPI_TypeDef, GPIO ports and pins) are passed as a `DriverInterfaceSPI` object into the `DiskioMMC` class.  The `DiskioMMC` object is then passed into the main `Driver` API class. A `FileManager` class can be used to manage the `DiskioMMC` and `Driver` objects.
+
+![](doc/cpp_fatfs-InnitSequence.png)
+
+<!-- @startuml
+MainApp -> DriverInterfaceSPI ** : create
+MainApp -> FileManager ** : create(DriverInterfaceSPI)
+FileManager -> DiskioMMC ** : create(DriverInterfaceSPI)
+FileManager -> Driver ** : create
+FileManager-> Driver : init(DiskioMMC)
+Driver -> Driver : unique_ptr<DiskioMMC>
+@enduml -->
 
 ### CMake
 

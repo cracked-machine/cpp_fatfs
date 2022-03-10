@@ -51,8 +51,8 @@ namespace fatfs {
 class DiskioMMC : public DiskioBase
 {
 public:
-    DiskioMMC() = default;
-
+    DiskioMMC(DriverInterfaceSPI &spi_interface);
+    void spi_init();
     DSTATUS initialize(BYTE pdrv) override;
     DSTATUS status(BYTE pdrv) override;
     DRESULT read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count) override;
@@ -60,6 +60,7 @@ public:
     DRESULT ioctl (BYTE pdrv, BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]]) override;
 
 private:
+    DriverInterfaceSPI m_spi_interface;
 };
 
 } // namespace fatfs 
