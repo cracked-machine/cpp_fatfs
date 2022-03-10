@@ -1,9 +1,7 @@
-### cpp_fatfs
-A C++ port of the fatfs library
 
 ### Architecture
 
-The main architecture consists of a public API that uses a lower level disk IO layer. 
+The main architecture consists of a public API that uses a lower level disk IO layer. This shows specific implementations of the DiskIO layer for MMC/SD and USB. 
 
 ![](doc/cpp_fatfs-BlockDiagram.png)
 
