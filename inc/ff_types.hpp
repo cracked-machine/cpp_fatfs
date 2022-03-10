@@ -19,7 +19,7 @@
 /----------------------------------------------------------------------------*/
 
 
-// MIT License
+// C++ port of the original source code is subject to MIT License
 
 // Copyright (c) 2022 Chris Sutton
 
@@ -53,6 +53,8 @@
 // #endif
 
 namespace fatfs {
+
+
 
 #define FF_INTDEF 2
 typedef unsigned int	UINT;	/* int must be 16-bit or 32-bit */

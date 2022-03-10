@@ -18,7 +18,7 @@
 /
 /----------------------------------------------------------------------------*/
 
-// C++ Port of the original source code are subject to MIT License
+// C++ port of the original source code is subject to MIT License
 
 // Copyright (c) 2022 Chris Sutton
 
@@ -223,10 +223,20 @@ static const BYTE DbcTbl[] = MKCVTBL(TBL_DC, FF_CODE_PAGE);
 
 #endif
 
-Driver::Driver(DiskioBase &diskio) 
-: m_diskio(&diskio) // initialize m_diskio (std::unique_ptr) with pointer to diskio arg
+Driver::Driver(const DiskioType dtype) 
 {
-	// do nothing
+	// initialize m_diskio (std::unique_ptr)
+	switch(dtype)
+	{
+		case DiskioType::MMC:
+			m_diskio = std::make_unique<DiskioMMC>();
+		break;
+		default:
+			while(true);
+			// non-MMC types not implemented...yet
+		break;		
+	}
+
 }
 
 

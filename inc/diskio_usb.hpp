@@ -19,7 +19,7 @@
 /
 /----------------------------------------------------------------------------*/
 
-// C++ Port of the original source code are subject to MIT License
+// C++ port of the original source code is subject to MIT License
 
 // Copyright (c) 2022 Chris Sutton
 
@@ -44,7 +44,7 @@
 #ifndef __DISKIO_USB_HPP__
 #define __DISKIO_USB_HPP__
 
-#include <ff.hpp>
+#include <diskio_base.hpp>
 
 namespace fatfs {
 

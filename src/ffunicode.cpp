@@ -22,7 +22,7 @@
 / by use of this software.
 */
 
-// C++ Port of the original source code are subject to MIT License
+// C++ port of the original source code is subject to MIT License
 
 // Copyright (c) 2022 Chris Sutton
 

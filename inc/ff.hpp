@@ -18,7 +18,7 @@
 /
 /----------------------------------------------------------------------------*/
 
-// C++ Port of the original source code are subject to MIT License
+// C++ port of the original source code is subject to MIT License
 
 // Copyright (c) 2022 Chris Sutton
 
@@ -43,7 +43,8 @@
 #ifndef __FF_HPP__
 #define __FF_HPP__
 
-#include <diskio_base.hpp>
+#include <diskio_usb.hpp>
+#include <diskio_mmc.hpp>
 #include <memory>
 
 #ifndef FF_DEFINED
@@ -56,7 +57,26 @@ class Driver {
 
 public:
 
-	Driver(DiskioBase &diskio); 
+	Driver(const DiskioType dtype); 
+
+	/* File access mode and open method flags (3rd argument of f_open) */
+	static constexpr uint8_t FA_READ		  =	0x01;
+	static constexpr uint8_t FA_WRITE		  =	0x02;
+	static constexpr uint8_t FA_OPEN_EXISTING =	0x00;
+	static constexpr uint8_t FA_CREATE_NEW	  =	0x04;
+	static constexpr uint8_t FA_CREATE_ALWAYS =	0x08;
+	static constexpr uint8_t FA_OPEN_ALWAYS	  =	0x10;
+	static constexpr uint8_t FA_OPEN_APPEND	  =	0x30;
+
+	/* Fast seek controls (2nd argument of f_lseek) */
+	static constexpr QWORD CREATE_LINKMAP	  = ((FSIZE_t)0 - 1);
+
+	/* Format options (2nd argument of f_mkfs) */
+	static constexpr uint8_t FM_FAT			  = 0x01;
+	static constexpr uint8_t FM_FAT32		  = 0x02;
+	static constexpr uint8_t FM_EXFAT		  =	0x04;
+	static constexpr uint8_t FM_ANY		      = 0x07;
+	static constexpr uint8_t FM_SFD			  = 0x08;	
 
 	static constexpr uint8_t SZDIRE			  =	32;		/* Size of a directory entry */
 
@@ -316,24 +336,7 @@ private:
 	/*--------------------------------------------------------------*/
 	/* Flags and offset address                                     */
 
-	/* File access mode and open method flags (3rd argument of f_open) */
-	static constexpr uint8_t FA_READ		  =	0x01;
-	static constexpr uint8_t FA_WRITE		  =	0x02;
-	static constexpr uint8_t FA_OPEN_EXISTING =	0x00;
-	static constexpr uint8_t FA_CREATE_NEW	  =	0x04;
-	static constexpr uint8_t FA_CREATE_ALWAYS =	0x08;
-	static constexpr uint8_t FA_OPEN_ALWAYS	  =	0x10;
-	static constexpr uint8_t FA_OPEN_APPEND	  =	0x30;
 
-	/* Fast seek controls (2nd argument of f_lseek) */
-	static constexpr QWORD CREATE_LINKMAP	  = ((FSIZE_t)0 - 1);
-
-	/* Format options (2nd argument of f_mkfs) */
-	static constexpr uint8_t FM_FAT			  = 0x01;
-	static constexpr uint8_t FM_FAT32		  = 0x02;
-	static constexpr uint8_t FM_EXFAT		  =	0x04;
-	static constexpr uint8_t FM_ANY		      = 0x07;
-	static constexpr uint8_t FM_SFD			  = 0x08;
 
 	/* Filesystem type (FATFS.fs_type) */
 	static constexpr uint8_t FS_FAT12		  = 1;
