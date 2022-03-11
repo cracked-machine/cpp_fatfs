@@ -15243,7 +15243,7 @@ static const WCHAR uc869[] = {	/*  CP869(Greek 2) to Unicode conversion table */
 /*------------------------------------------------------------------------*/
 
 #if FF_CODE_PAGE != 0 && FF_CODE_PAGE < 900
-WCHAR Driver::f_uni2oem (	/* Returns OEM code character, zero on error */
+WCHAR DriverCommon::f_uni2oem (	/* Returns OEM code character, zero on error */
 	DWORD	uni,	/* UTF-16 encoded character to be converted */
 	WORD	cp		/* Code page for the conversion */
 )
@@ -15265,7 +15265,7 @@ WCHAR Driver::f_uni2oem (	/* Returns OEM code character, zero on error */
 	return c;
 }
 
-WCHAR Driver::f_oem2uni (	/* Returns Unicode character in UTF-16, zero on error */
+WCHAR DriverCommon::f_oem2uni (	/* Returns Unicode character in UTF-16, zero on error */
 	WCHAR	oem,	/* OEM code to be converted */
 	WORD	cp		/* Code page for the conversion */
 )
@@ -15485,7 +15485,7 @@ WCHAR Driver::f_oem2uni (	/* Returns Unicode character in UTF-16, zero on error 
 /* Unicode up-case conversion                                             */
 /*------------------------------------------------------------------------*/
 
-DWORD Driver::f_wtoupper (	/* Returns up-converted code point */
+DWORD DriverCommon::f_wtoupper (	/* Returns up-converted code point */
 	DWORD uni		/* Unicode code point to be up-converted */
 )
 {

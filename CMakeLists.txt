@@ -1,5 +1,6 @@
 target_sources(${BUILD_NAME} PRIVATE
     src/ff.cpp
+    src/ff_common.cpp
     src/ffsystem.cpp
     src/ffunicode.cpp
     src/diskio_base.cpp

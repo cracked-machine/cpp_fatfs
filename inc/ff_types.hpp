@@ -44,9 +44,15 @@
 #ifndef __FF_TYPES_HPP__
 #define __FF_TYPES_HPP__
 
-// FatFs configuration options 
+
 #include <ffconf.hpp>		
+
 #include <cstdint>
+#include <cctype>
+#include <cmath>			
+#include <cstring>
+#include <memory>
+#include <type_traits>
 
 // #if FF_DEFINED != FFCONF_DEF
 // #error Wrong configuration file (ffconf.h).
@@ -113,6 +119,7 @@ typedef char TCHAR;
 extern const char* VolumeStr[FF_VOLUMES];	/* User defied volume ID */
 #endif
 #endif
+
 
 
 
@@ -501,7 +508,264 @@ extern PARTITION VolToPart[];	/* Volume - Partition mapping table */
 					0xF0,0xF1,0xD1,0xD2,0xD3,0xF5,0xD4,0xF7,0xF8,0xF9,0xD5,0x96,0x95,0x98,0xFE,0xFF}
 
 
+	/* File access mode and open method flags (3rd argument of f_open) */
+	static constexpr uint8_t FA_READ		  =	0x01;
+	static constexpr uint8_t FA_WRITE		  =	0x02;
+	static constexpr uint8_t FA_OPEN_EXISTING =	0x00;
+	static constexpr uint8_t FA_CREATE_NEW	  =	0x04;
+	static constexpr uint8_t FA_CREATE_ALWAYS =	0x08;
+	static constexpr uint8_t FA_OPEN_ALWAYS	  =	0x10;
+	static constexpr uint8_t FA_OPEN_APPEND	  =	0x30;
 
+
+	/* Fast seek controls (2nd argument of f_lseek) */
+	static constexpr QWORD CREATE_LINKMAP	  = ((FSIZE_t)0 - 1);
+
+	/* Format options (2nd argument of f_mkfs) */
+	static constexpr uint8_t FM_FAT			  = 0x01;
+	static constexpr uint8_t FM_FAT32		  = 0x02;
+	static constexpr uint8_t FM_EXFAT		  =	0x04;
+	static constexpr uint8_t FM_ANY		      = 0x07;
+	static constexpr uint8_t FM_SFD			  = 0x08;	
+
+	/* Limits and boundaries */
+	static constexpr uint32_t MAX_DIR 		= 0x200000;			/* Max size of FAT directory */
+	static constexpr uint32_t MAX_DIR_EX	= 0x10000000;		/* Max size of exFAT directory */
+	static constexpr uint32_t MAX_FAT12		= 0xFF5;			/* Max FAT12 clusters (differs from specs, but right for real DOS/Windows behavior) */
+	static constexpr uint32_t MAX_FAT16		= 0xFFF5;			/* Max FAT16 clusters (differs from specs, but right for real DOS/Windows behavior) */
+	static constexpr uint32_t MAX_FAT32		= 0x0FFFFFF5;		/* Max FAT32 clusters (not specified, practical limit) */
+	static constexpr uint32_t MAX_EXFAT		= 0x7FFFFFFD;		/* Max exFAT clusters (differs from specs, implementation limit) */
+	
+	/* Additional file access control and file status flags for internal use */
+	static constexpr uint8_t FA_SEEKEND		= 0x20;	/* Seek to end of the file on file open */
+	static constexpr uint8_t FA_MODIFIED	= 0x40;	/* File has been modified */
+	static constexpr uint8_t FA_DIRTY		= 0x80;	/* FIL.buf[] needs to be written-back */	
+
+	/* Additional file attribute bits for internal use */
+	static constexpr uint8_t AM_VOL			= 0x08;	/* Volume label */
+	static constexpr uint8_t AM_LFN			= 0x0F;	/* LFN entry */
+	static constexpr uint8_t AM_MASK		= 0x3F;	/* Mask of defined bits in FAT */
+	static constexpr uint8_t AM_MASKX	    = 0x37;	/* Mask of defined bits in exFAT */
+
+	/* Name status flags in fn[11] */
+	static constexpr uint8_t NSFLAG			= 11;	/* Index of the name status byte */
+	static constexpr uint8_t NS_LOSS		= 0x01;	/* Out of 8.3 format */
+	static constexpr uint8_t NS_LFN			= 0x02;	/* Force to create LFN entry */
+	static constexpr uint8_t NS_LAST		= 0x04;	/* Last segment */
+	static constexpr uint8_t NS_BODY		= 0x08;	/* Lower case flag (body) */
+	static constexpr uint8_t NS_EXT			= 0x10;	/* Lower case flag (ext) */
+	static constexpr uint8_t NS_DOT			= 0x20;	/* Dot entry */
+	static constexpr uint8_t NS_NOLFN		= 0x40;	/* Do not find LFN */
+	static constexpr uint8_t NS_NONAME		= 0x80;	/* Not followed */	
+
+	/* exFAT directory entry types */
+	static constexpr uint8_t ET_BITMAP		= 0x81;	/* Allocation bitmap */
+	static constexpr uint8_t ET_UPCASE		= 0x82;	/* Up-case table */
+	static constexpr uint8_t ET_VLABEL		= 0x83;	/* Volume label */
+	static constexpr uint8_t ET_FILEDIR		= 0x85;	/* File and directory */
+	static constexpr uint8_t ET_STREAM		= 0xC0;	/* Stream extension */
+	static constexpr uint8_t ET_FILENAME	= 0xC1;	/* Name extension */	
+
+	/* FatFs refers the FAT structure as simple byte array instead of structure member
+	/ because the C structure is not binary compatible between different platforms */
+
+	static constexpr uint8_t BS_JmpBoot		= 0;		/* x86 jump instruction (3-byte) */
+	static constexpr uint8_t BS_OEMName		= 3;		/* OEM name (8-byte) */
+	static constexpr uint8_t BPB_BytsPerSec	= 11;		/* Sector size [byte] (WORD) */
+	static constexpr uint8_t BPB_SecPerClus	= 13;		/* Cluster size [sector] (BYTE) */
+	static constexpr uint8_t BPB_RsvdSecCnt	= 14;		/* Size of reserved area [sector] (WORD) */
+	static constexpr uint8_t BPB_NumFATs	= 16;		/* Number of FATs (BYTE) */
+	static constexpr uint8_t BPB_RootEntCnt	= 17;		/* Size of root directory area for FAT [entry] (WORD) */
+	static constexpr uint8_t BPB_TotSec16	= 19;		/* Volume size (16-bit) [sector] (WORD) */
+	static constexpr uint8_t BPB_Media		= 21;		/* Media descriptor byte (BYTE) */
+	static constexpr uint8_t BPB_FATSz16	= 22;		/* FAT size (16-bit) [sector] (WORD) */
+	static constexpr uint8_t BPB_SecPerTrk	= 24;		/* Number of sectors per track for int13h [sector] (WORD) */
+	static constexpr uint8_t BPB_NumHeads	= 26;		/* Number of heads for int13h (WORD) */
+	static constexpr uint8_t BPB_HiddSec	= 28;		/* Volume offset from top of the drive (DWORD) */
+	static constexpr uint8_t BPB_TotSec32	= 32;		/* Volume size (32-bit) [sector] (DWORD) */
+	static constexpr uint8_t BS_DrvNum		= 36;		/* Physical drive number for int13h (BYTE) */
+	static constexpr uint8_t BS_NTres		= 37;		/* WindowsNT error flag (BYTE) */
+	static constexpr uint8_t BS_BootSig		= 38;		/* Extended boot signature (BYTE) */
+	static constexpr uint8_t BS_VolID		= 39;		/* Volume serial number (DWORD) */
+	static constexpr uint8_t BS_VolLab		= 43;		/* Volume label string (8-byte) */
+	static constexpr uint8_t BS_FilSysType	= 54;		/* Filesystem type string (8-byte) */
+	static constexpr uint8_t BS_BootCode	= 62;		/* Boot code (448-byte) */
+	static constexpr uint16_t BS_55AA		= 510;		/* Signature word (WORD) */	
+
+
+	static constexpr uint8_t BPB_FATSz32	= 36;		/* FAT32: FAT size [sector] (DWORD) */
+	static constexpr uint8_t BPB_ExtFlags32	= 40;		/* FAT32: Extended flags (WORD) */
+	static constexpr uint8_t BPB_FSVer32	= 42;		/* FAT32: Filesystem version (WORD) */
+	static constexpr uint8_t BPB_RootClus32	= 44;		/* FAT32: Root directory cluster (DWORD) */
+	static constexpr uint8_t BPB_FSInfo32	= 48;		/* FAT32: Offset of FSINFO sector (WORD) */
+	static constexpr uint8_t BPB_BkBootSec32 = 50;		/* FAT32: Offset of backup boot sector (WORD) */
+	static constexpr uint8_t BS_DrvNum32	= 64;		/* FAT32: Physical drive number for int13h (BYTE) */
+	static constexpr uint8_t BS_NTres32		= 65;		/* FAT32: Error flag (BYTE) */
+	static constexpr uint8_t BS_BootSig32	= 66;		/* FAT32: Extended boot signature (BYTE) */
+	static constexpr uint8_t BS_VolID32		= 67;		/* FAT32: Volume serial number (DWORD) */
+	static constexpr uint8_t BS_VolLab32	= 71;		/* FAT32: Volume label string (8-byte) */
+	static constexpr uint8_t BS_FilSysType32 = 82;		/* FAT32: Filesystem type string (8-byte) */
+	static constexpr uint8_t BS_BootCode32	= 90;		/* FAT32: Boot code (420-byte) */
+
+	static constexpr uint8_t BPB_ZeroedEx	= 11;		/* exFAT: MBZ field (53-byte) */
+	static constexpr uint8_t BPB_VolOfsEx	= 64;		/* exFAT: Volume offset from top of the drive [sector] (QWORD) */
+	static constexpr uint8_t BPB_TotSecEx	= 72;		/* exFAT: Volume size [sector] (QWORD) */
+	static constexpr uint8_t BPB_FatOfsEx	= 80;		/* exFAT: FAT offset from top of the volume [sector] (DWORD) */
+	static constexpr uint8_t BPB_FatSzEx	= 84;		/* exFAT: FAT size [sector] (DWORD) */
+	static constexpr uint8_t BPB_DataOfsEx	= 88;		/* exFAT: Data offset from top of the volume [sector] (DWORD) */
+	static constexpr uint8_t BPB_NumClusEx	= 92;		/* exFAT: Number of clusters (DWORD) */
+	static constexpr uint8_t BPB_RootClusEx	= 96;		/* exFAT: Root directory start cluster (DWORD) */
+	static constexpr uint8_t BPB_VolIDEx	= 100;		/* exFAT: Volume serial number (DWORD) */
+	static constexpr uint8_t BPB_FSVerEx	= 104;		/* exFAT: Filesystem version (WORD) */
+	static constexpr uint8_t BPB_VolFlagEx	= 106;		/* exFAT: Volume flags (WORD) */
+	static constexpr uint8_t BPB_BytsPerSecEx = 108;		/* exFAT: Log2 of sector size in unit of byte (BYTE) */
+	static constexpr uint8_t BPB_SecPerClusEx = 109;		/* exFAT: Log2 of cluster size in unit of sector (BYTE) */
+	static constexpr uint8_t BPB_NumFATsEx	  = 110;		/* exFAT: Number of FATs (BYTE) */
+	static constexpr uint8_t BPB_DrvNumEx	  = 111;		/* exFAT: Physical drive number for int13h (BYTE) */
+	static constexpr uint8_t BPB_PercInUseEx  = 112;		/* exFAT: Percent in use (BYTE) */
+	static constexpr uint8_t BPB_RsvdEx		  = 113;		/* exFAT: Reserved (7-byte) */
+	static constexpr uint8_t BS_BootCodeEx	  = 120;		/* exFAT: Boot code (390-byte) */
+
+	static constexpr uint8_t DIR_Name		  = 0;		/* Short file name (11-byte) */
+	static constexpr uint8_t DIR_Attr		  = 11;		/* Attribute (BYTE) */
+	static constexpr uint8_t DIR_NTres		  = 12;		/* Lower case flag (BYTE) */
+	static constexpr uint8_t DIR_CrtTime10	  = 13;		/* Created time sub-second (BYTE) */
+	static constexpr uint8_t DIR_CrtTime	  = 14;		/* Created time (DWORD) */
+	static constexpr uint8_t DIR_LstAccDate	  = 18;		/* Last accessed date (WORD) */
+	static constexpr uint8_t DIR_FstClusHI	  = 20;		/* Higher 16-bit of first cluster (WORD) */
+	static constexpr uint8_t DIR_ModTime	  = 22;		/* Modified time (DWORD) */
+	static constexpr uint8_t DIR_FstClusLO	  = 26;		/* Lower 16-bit of first cluster (WORD) */
+	static constexpr uint8_t DIR_FileSize	  = 28;		/* File size (DWORD) */
+	static constexpr uint8_t LDIR_Ord		  = 0;		/* LFN: LFN order and LLE flag (BYTE) */
+	static constexpr uint8_t LDIR_Attr		  = 11;		/* LFN: LFN attribute (BYTE) */
+	static constexpr uint8_t LDIR_Type		  = 12;		/* LFN: Entry type (BYTE) */
+	static constexpr uint8_t LDIR_Chksum	  =	13;		/* LFN: Checksum of the SFN (BYTE) */
+	static constexpr uint8_t LDIR_FstClusLO	  =	26;		/* LFN: MBZ field (WORD) */
+	static constexpr uint8_t XDIR_Type		  = 0;		/* exFAT: Type of exFAT directory entry (BYTE) */
+	static constexpr uint8_t XDIR_NumLabel	  =	1;		/* exFAT: Number of volume label characters (BYTE) */
+	static constexpr uint8_t XDIR_Label		  =	2;		/* exFAT: Volume label (11-WORD) */
+	static constexpr uint8_t XDIR_CaseSum	  =	4;		/* exFAT: Sum of case conversion table (DWORD) */
+	static constexpr uint8_t XDIR_NumSec	  = 1;		/* exFAT: Number of secondary entries (BYTE) */
+	static constexpr uint8_t XDIR_SetSum	  = 2;		/* exFAT: Sum of the set of directory entries (WORD) */
+	static constexpr uint8_t XDIR_Attr		  =	4;		/* exFAT: File attribute (WORD) */
+	static constexpr uint8_t XDIR_CrtTime	  =	8;		/* exFAT: Created time (DWORD) */
+	static constexpr uint8_t XDIR_ModTime	  =	12;		/* exFAT: Modified time (DWORD) */
+	static constexpr uint8_t XDIR_AccTime	  =	16;		/* exFAT: Last accessed time (DWORD) */
+	static constexpr uint8_t XDIR_CrtTime10	  =	20;		/* exFAT: Created time subsecond (BYTE) */
+	static constexpr uint8_t XDIR_ModTime10	  =	21;		/* exFAT: Modified time subsecond (BYTE) */
+	static constexpr uint8_t XDIR_CrtTZ		  =	22;		/* exFAT: Created timezone (BYTE) */
+	static constexpr uint8_t XDIR_ModTZ		  =	23;		/* exFAT: Modified timezone (BYTE) */
+	static constexpr uint8_t XDIR_AccTZ		  =	24;		/* exFAT: Last accessed timezone (BYTE) */
+	static constexpr uint8_t XDIR_GenFlags	  =	33;		/* exFAT: General secondary flags (BYTE) */
+	static constexpr uint8_t XDIR_NumName	  =	35;		/* exFAT: Number of file name characters (BYTE) */
+	static constexpr uint8_t XDIR_NameHash	  =	36;		/* exFAT: Hash of file name (WORD) */
+	static constexpr uint8_t XDIR_ValidFileSize = 40;		/* exFAT: Valid file size (QWORD) */
+	static constexpr uint8_t XDIR_FstClus	  =	52;		/* exFAT: First cluster of the file data (DWORD) */
+	static constexpr uint8_t XDIR_FileSize	  =	56;		/* exFAT: File/Directory size (QWORD) */
+
+
+	static constexpr uint8_t DDEM			  =	0xE5;	/* Deleted directory entry mark set to DIR_Name[0] */
+	static constexpr uint8_t RDDEM			  =	0x05;	/* Replacement of the character collides with DDEM */
+	static constexpr uint8_t LLEF			  =	0x40;	/* Last long entry flag in LDIR_Ord */
+
+	static constexpr uint8_t FSI_LeadSig	  =	0;		/* FAT32 FSI: Leading signature (DWORD) */
+	static constexpr uint16_t FSI_StrucSig	  =	484;		/* FAT32 FSI: Structure signature (DWORD) */
+	static constexpr uint16_t FSI_Free_Count  = 488;		/* FAT32 FSI: Number of free clusters (DWORD) */
+	static constexpr uint16_t FSI_Nxt_Free	  =	492;		/* FAT32 FSI: Last allocated cluster (DWORD) */
+
+	static constexpr uint16_t MBR_Table		  =	446;		/* MBR: Offset of partition table in the MBR */
+	static constexpr uint8_t SZ_PTE			  =	16;		/* MBR: Size of a partition table entry */
+	static constexpr uint8_t PTE_Boot		  =	0;		/* MBR PTE: Boot indicator */
+	static constexpr uint8_t PTE_StHead		  =	1;		/* MBR PTE: Start head */
+	static constexpr uint8_t PTE_StSec		  =	2;		/* MBR PTE: Start sector */
+	static constexpr uint8_t PTE_StCyl		  =	3;		/* MBR PTE: Start cylinder */
+	static constexpr uint8_t PTE_System		  =	4;		/* MBR PTE: System ID */
+	static constexpr uint8_t PTE_EdHead		  =	5;		/* MBR PTE: End head */
+	static constexpr uint8_t PTE_EdSec		  =	6;		/* MBR PTE: End sector */
+	static constexpr uint8_t PTE_EdCyl		  =	7;		/* MBR PTE: End cylinder */
+	static constexpr uint8_t PTE_StLba		  =	8;		/* MBR PTE: Start in LBA */
+	static constexpr uint8_t PTE_SizLba		  =	12;		/* MBR PTE: Size in LBA */
+
+	static constexpr uint8_t GPTH_Sign		  =	0;		/* GPT: Header signature (8-byte) */
+	static constexpr uint8_t GPTH_Rev		  =	8;		/* GPT: Revision (DWORD) */
+	static constexpr uint8_t GPTH_Size		  =	12;		/* GPT: Header size (DWORD) */
+	static constexpr uint8_t GPTH_Bcc		  =	16;		/* GPT: Header BCC (DWORD) */
+	static constexpr uint8_t GPTH_CurLba	  =	24;		/* GPT: Main header LBA (QWORD) */
+	static constexpr uint8_t GPTH_BakLba	  = 32;		/* GPT: Backup header LBA (QWORD) */
+	static constexpr uint8_t GPTH_FstLba	  = 40;		/* GPT: First LBA for partitions (QWORD) */
+	static constexpr uint8_t GPTH_LstLba	  =	48;		/* GPT: Last LBA for partitions (QWORD) */
+	static constexpr uint8_t GPTH_DskGuid	  =	56;		/* GPT: Disk GUID (16-byte) */
+	static constexpr uint8_t GPTH_PtOfs		  =	72;		/* GPT: Partation table LBA (QWORD) */
+	static constexpr uint8_t GPTH_PtNum		  =	80;		/* GPT: Number of table entries (DWORD) */
+	static constexpr uint8_t GPTH_PteSize	  =	84;		/* GPT: Size of table entry (DWORD) */
+	static constexpr uint8_t GPTH_PtBcc		  =	88;		/* GPT: Partation table BCC (DWORD) */
+	static constexpr uint8_t SZ_GPTE		  = 128;		/* GPT: Size of partition table entry */
+	static constexpr uint8_t GPTE_PtGuid	  = 0;		/* GPT PTE: Partition type GUID (16-byte) */
+	static constexpr uint8_t GPTE_UpGuid	  =	16;		/* GPT PTE: Partition unique GUID (16-byte) */
+	static constexpr uint8_t GPTE_FstLba	  =	32;		/* GPT PTE: First LBA (QWORD) */
+	static constexpr uint8_t GPTE_LstLba	  =	40;		/* GPT PTE: Last LBA inclusive (QWORD) */
+	static constexpr uint8_t GPTE_Flags		  =	48;		/* GPT PTE: Flags (QWORD) */
+	static constexpr uint8_t GPTE_Name		  =	56;		/* GPT PTE: Name */	
+
+	/*--------------------------------------------------------------*/
+	/* Flags and offset address                                     */
+
+
+
+	/* Filesystem type (FATFS.fs_type) */
+	static constexpr uint8_t FS_FAT12		  = 1;
+	static constexpr uint8_t FS_FAT16		  = 2;
+	static constexpr uint8_t FS_FAT32		  = 3;
+	static constexpr uint8_t FS_EXFAT		  = 4;
+
+	/* File attribute bits for directory entry (FILINFO.fattrib) */
+	static constexpr uint8_t AM_RDO			  = 0x01;	/* Read only */
+	static constexpr uint8_t AM_HID			  = 0x02;	/* Hidden */
+	static constexpr uint8_t AM_SYS			  = 0x04;	/* System */
+	static constexpr uint8_t AM_DIR			  = 0x10;	/* Directory */
+	static constexpr uint8_t AM_ARC	          = 0x20;	/* Archive */	
+
+
+/*--------------------------------*/
+/* Code conversion tables         */
+/*--------------------------------*/
+
+#if FF_CODE_PAGE == 0	/* Run-time code page configuration */
+#define CODEPAGE CodePage
+static WORD CodePage;	/* Current code page */
+static const BYTE *ExCvt, *DbcTbl;	/* Pointer to current SBCS up-case table and DBCS code range table below */
+
+static const BYTE Ct437[] = TBL_CT437;
+static const BYTE Ct720[] = TBL_CT720;
+static const BYTE Ct737[] = TBL_CT737;
+static const BYTE Ct771[] = TBL_CT771;
+static const BYTE Ct775[] = TBL_CT775;
+static const BYTE Ct850[] = TBL_CT850;
+static const BYTE Ct852[] = TBL_CT852;
+static const BYTE Ct855[] = TBL_CT855;
+static const BYTE Ct857[] = TBL_CT857;
+static const BYTE Ct860[] = TBL_CT860;
+static const BYTE Ct861[] = TBL_CT861;
+static const BYTE Ct862[] = TBL_CT862;
+static const BYTE Ct863[] = TBL_CT863;
+static const BYTE Ct864[] = TBL_CT864;
+static const BYTE Ct865[] = TBL_CT865;
+static const BYTE Ct866[] = TBL_CT866;
+static const BYTE Ct869[] = TBL_CT869;
+static const BYTE Dc932[] = TBL_DC932;
+static const BYTE Dc936[] = TBL_DC936;
+static const BYTE Dc949[] = TBL_DC949;
+static const BYTE Dc950[] = TBL_DC950;
+
+#elif FF_CODE_PAGE < 900	/* Static code page configuration (SBCS) */
+#define CODEPAGE FF_CODE_PAGE
+static const BYTE ExCvt[] = MKCVTBL(TBL_CT, FF_CODE_PAGE);
+
+#else					/* Static code page configuration (DBCS) */
+#define CODEPAGE FF_CODE_PAGE
+static const BYTE DbcTbl[] = MKCVTBL(TBL_DC, FF_CODE_PAGE);
+
+#endif
 
 
 } // namespace fatfs
