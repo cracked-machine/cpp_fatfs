@@ -41,18 +41,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef __DISKIO_USB_HPP__
-#define __DISKIO_USB_HPP__
+#ifndef __DISKIO_HARDWARE_USB_HPP__
+#define __DISKIO_HARDWARE_USB_HPP__
 
-#include <diskio_base.hpp>
+#include <diskio_hardware_base.hpp>
+#include <diskio_protocol_usb.hpp>
 
 namespace fatfs {
 
-class DiskioUSB : public DiskioBase
+template<typename PROTOCOL>
+class DiskioHardwareUSB : public DiskioHardwareBase
 {
 public:
-    DiskioUSB() = default;
-
+    DiskioHardwareUSB(PROTOCOL &protocol_interface);
+    void periph_init();
     DSTATUS initialize(BYTE pdrv) override;
     DSTATUS status(BYTE pdrv) override;
     DRESULT read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count) override;
@@ -60,8 +62,11 @@ public:
     DRESULT ioctl (BYTE pdrv, BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]]) override;
 
 private:
+    PROTOCOL m_protocol_interface;
 };
+
+using DiskIO_USB = fatfs::DiskioHardwareUSB<fatfs::DiskioProtocolUSB>;
 
 } // namespace fatfs 
 
-#endif // __DISKIO_USB_HPP__
+#endif // __DISKIO_HARDWARE_USB_HPP__

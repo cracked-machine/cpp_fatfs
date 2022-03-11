@@ -48,7 +48,7 @@ namespace fatfs
 {
 
 #if FF_FS_LOCK != 0
-static FILESEM Files[FF_FS_LOCK];	/* Open object lock semaphores */
+[[maybe_unused]] static FILESEM Files[FF_FS_LOCK];	/* Open object lock semaphores */
 #endif
 
 /* Character code support macros */
@@ -130,7 +130,8 @@ void DriverCommon::st_qword (BYTE* ptr, QWORD val)	/* Store an 8-byte word in li
 	*ptr++ = (BYTE)val; val >>= 8;
 	*ptr++ = (BYTE)val;
 }
-
+#endif
+#endif	/* !FF_FS_READONLY */
 
 /*-----------------------------------------------------------------------*/
 /* String functions                                                      */
@@ -480,8 +481,8 @@ LBA_t DriverCommon::clst2sect (	/* !=0:Sector number, 0:Failed (invalid cluster#
 	if (clst >= fs->n_fatent - 2) return 0;		/* Is it invalid cluster number? */
 	return fs->database + (LBA_t)fs->csize * clst;	/* Start sector number of the cluster */
 }
-#endif
-#endif	/* !FF_FS_READONLY */
+
+
 
 #if FF_USE_FASTSEEK
 /*-----------------------------------------------------------------------*/

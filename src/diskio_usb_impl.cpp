@@ -41,34 +41,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <diskio_usb.hpp>
+#include <diskio_hardware_usb.hpp>
 
 
 namespace fatfs {
 
-DiskioUSB::DSTATUS DiskioUSB::initialize(BYTE pdrv [[maybe_unused]]) 
+template<>
+DiskIO_USB::DSTATUS DiskIO_USB::initialize(BYTE pdrv [[maybe_unused]]) 
 {
     DSTATUS res = 0;
     return res;
 }
 
-DiskioUSB::DSTATUS DiskioUSB::status(BYTE pdrv [[maybe_unused]]) 
+template<>
+DiskIO_USB::DSTATUS DiskIO_USB::status(BYTE pdrv [[maybe_unused]]) 
 {
     DSTATUS res = 0;
     return res;
 }
 
-DiskioUSB::DRESULT DiskioUSB::read(BYTE pdrv [[maybe_unused]], BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
+template<>
+DiskIO_USB::DRESULT DiskIO_USB::read(BYTE pdrv [[maybe_unused]], BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
 {
     return DRESULT::RES_OK;
 }
 
-DiskioUSB::DRESULT DiskioUSB::write(BYTE pdrv [[maybe_unused]], const BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
+template<>
+DiskIO_USB::DRESULT DiskIO_USB::write(BYTE pdrv [[maybe_unused]], const BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
 {
     return DRESULT::RES_OK;
 }
 
-DiskioUSB::DRESULT DiskioUSB::ioctl (BYTE pdrv [[maybe_unused]], BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]])
+template<>
+DiskIO_USB::DRESULT DiskIO_USB::ioctl (BYTE pdrv [[maybe_unused]], BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]])
 {
     return DRESULT::RES_OK;
 }

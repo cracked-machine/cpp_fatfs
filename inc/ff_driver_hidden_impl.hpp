@@ -59,7 +59,7 @@ FRESULT Driver<IOTYPE>::sync_window (FATFS* fs)
 
 
 	if (fs->wflag) {	/* Is the disk access window dirty? */
-		if (m_diskio->write(fs->pdrv, fs->win, fs->winsect, 1) == DiskioBase::DRESULT::RES_OK) {	/* Write it back into the volume */
+		if (m_diskio->write(fs->pdrv, fs->win, fs->winsect, 1) == DiskioHardwareBase::DRESULT::RES_OK) {	/* Write it back into the volume */
 			fs->wflag = 0;	/* Clear window dirty flag */
 			if (fs->winsect - fs->fatbase < fs->fsize) {	/* Is it in the 1st FAT? */
 				if (fs->n_fats == 2) m_diskio->write(fs->pdrv, fs->win, fs->winsect + fs->fsize, 1);	/* Reflect it to 2nd FAT if needed */
@@ -90,7 +90,7 @@ FRESULT Driver<IOTYPE>::validate (FFOBJID* obj,	FATFS** rfs)
 				res = FR_TIMEOUT;
 			}
 	#else
-			if (!(m_diskio->status(obj->fs->pdrv) & DiskioBase::STA_NOINIT)) { /* Test if the phsical drive is kept initialized */
+			if (!(m_diskio->status(obj->fs->pdrv) & DiskioHardwareBase::STA_NOINIT)) { /* Test if the phsical drive is kept initialized */
 				res = FR_OK;
 			}
 	#endif
@@ -103,7 +103,7 @@ template<typename IOTYPE>
 FRESULT Driver<IOTYPE>::mount_volume (const TCHAR** path, FATFS** rfs, BYTE mode)
 {
 	int vol;
-	DiskioBase::DSTATUS stat;
+	DiskioHardwareBase::DSTATUS stat;
 	LBA_t bsect;
 	DWORD tsect, sysect, fasize, nclst, szbfat;
 	WORD nrsv;
@@ -127,8 +127,8 @@ FRESULT Driver<IOTYPE>::mount_volume (const TCHAR** path, FATFS** rfs, BYTE mode
 	mode &= (BYTE)~FA_READ;				/* Desired access mode, write access or not */
 	if (fs->fs_type != 0) {				/* If the volume has been mounted */
 		stat = m_diskio->status(fs->pdrv);
-		if (!(stat & DiskioBase::STA_NOINIT)) {		/* and the physical drive is kept initialized */
-			if (!FF_FS_READONLY && mode && (stat & DiskioBase::STA_PROTECT)) {	/* Check write protection if needed */
+		if (!(stat & DiskioHardwareBase::STA_NOINIT)) {		/* and the physical drive is kept initialized */
+			if (!FF_FS_READONLY && mode && (stat & DiskioHardwareBase::STA_PROTECT)) {	/* Check write protection if needed */
 				return FR_WRITE_PROTECTED;
 			}
 			return FR_OK;				/* The filesystem object is already valid */
@@ -141,14 +141,14 @@ FRESULT Driver<IOTYPE>::mount_volume (const TCHAR** path, FATFS** rfs, BYTE mode
 	fs->fs_type = 0;					/* Clear the filesystem object */
 	fs->pdrv = LD2PD(vol);				/* Volume hosting physical drive */
 	stat = m_diskio->initialize(fs->pdrv);	/* Initialize the physical drive */
-	if (stat & DiskioBase::STA_NOINIT) { 			/* Check if the initialization succeeded */
+	if (stat & DiskioHardwareBase::STA_NOINIT) { 			/* Check if the initialization succeeded */
 		return FR_NOT_READY;			/* Failed to initialize due to no medium or hard error */
 	}
-	if (!FF_FS_READONLY && mode && (stat & DiskioBase::STA_PROTECT)) { /* Check disk write protection if needed */
+	if (!FF_FS_READONLY && mode && (stat & DiskioHardwareBase::STA_PROTECT)) { /* Check disk write protection if needed */
 		return FR_WRITE_PROTECTED;
 	}
 #if FF_MAX_SS != FF_MIN_SS				/* Get sector size (multiple sector size cfg only) */
-	if (m_diskio->ioctl(fs->pdrv, GET_SECTOR_SIZE, &SS(fs)) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;
+	if (m_diskio->ioctl(fs->pdrv, GET_SECTOR_SIZE, &SS(fs)) != DiskioHardwareBase::DRESULT::RES_OK) return FR_DISK_ERR;
 	if (SS(fs) > FF_MAX_SS || SS(fs) < FF_MIN_SS || (SS(fs) & (SS(fs) - 1))) return FR_DISK_ERR;
 #endif
 
@@ -399,8 +399,6 @@ UINT Driver<IOTYPE>::find_volume (FATFS* fs, UINT part)
 }
 
 
-
-
 template<typename IOTYPE>
 FRESULT Driver<IOTYPE>::move_window (FATFS* fs, LBA_t sect)
 {
@@ -412,7 +410,7 @@ FRESULT Driver<IOTYPE>::move_window (FATFS* fs, LBA_t sect)
 		res = sync_window(fs);		/* Flush the window */
 #endif
 		if (res == FR_OK) {			/* Fill sector window with new data */
-			if (m_diskio->read(fs->pdrv, fs->win, sect, 1) != DiskioBase::DRESULT::RES_OK) {
+			if (m_diskio->read(fs->pdrv, fs->win, sect, 1) != DiskioHardwareBase::DRESULT::RES_OK) {
 				sect = (LBA_t)0 - 1;	/* Invalidate window if read data is not valid */
 				res = FR_DISK_ERR;
 			}
@@ -421,9 +419,6 @@ FRESULT Driver<IOTYPE>::move_window (FATFS* fs, LBA_t sect)
 	}
 	return res;
 }
-
-
-
 
 #if !FF_FS_READONLY
 
@@ -448,14 +443,13 @@ FRESULT Driver<IOTYPE>::sync_fs (FATFS* fs)
 			fs->fsi_flag = 0;
 		}
 		/* Make sure that no pending write process in the lower layer */
-		if (m_diskio->ioctl(fs->pdrv, DiskioBase::CTRL_SYNC, 0) != DiskioBase::DRESULT::RES_OK) res = FR_DISK_ERR;
+		if (m_diskio->ioctl(fs->pdrv, DiskioHardwareBase::CTRL_SYNC, 0) != DiskioHardwareBase::DRESULT::RES_OK) res = FR_DISK_ERR;
 	}
 
 	return res;
 }
 
-#endif
-
+#endif // !FF_FS_READONLY
 
 template<typename IOTYPE>
 DWORD Driver<IOTYPE>::get_fat (FFOBJID* obj, DWORD clst)
@@ -524,8 +518,6 @@ DWORD Driver<IOTYPE>::get_fat (FFOBJID* obj, DWORD clst)
 
 	return val;
 }
-
-
 
 
 #if !FF_FS_READONLY
@@ -729,7 +721,7 @@ FRESULT Driver<IOTYPE>::remove_chain (FFOBJID* obj,	DWORD clst,	DWORD pclst)
 #if FF_USE_TRIM
 			rt[0] = clst2sect(fs, scl);					/* Start of data area to be freed */
 			rt[1] = clst2sect(fs, ecl) + fs->csize - 1;	/* End of data area to be freed */
-			m_diskio->ioctl(fs->pdrv, DiskioBase::CTRL_TRIM, rt);		/* Inform storage device that the data in the block may be erased */
+			m_diskio->ioctl(fs->pdrv, DiskioHardwareBase::CTRL_TRIM, rt);		/* Inform storage device that the data in the block may be erased */
 #endif
 			scl = ecl = nxt;
 		}
@@ -879,13 +871,13 @@ FRESULT Driver<IOTYPE>::dir_clear (FATFS *fs, DWORD clst)
 	if (szb > SS(fs)) {		/* Buffer allocated? */
 		std::memset(ibuf, 0, szb);
 		szb /= SS(fs);		/* Bytes -> Sectors */
-		for (n = 0; n < fs->csize && m_diskio->write(fs->pdrv, ibuf, sect + n, szb) == DiskioBase::DRESULT::RES_OK; n += szb) ;	/* Fill the cluster with 0 */
+		for (n = 0; n < fs->csize && m_diskio->write(fs->pdrv, ibuf, sect + n, szb) == DiskioHardwareBase::DRESULT::RES_OK; n += szb) ;	/* Fill the cluster with 0 */
 		ff_memfree(ibuf);
 	} else
 #endif
 	{
 		ibuf = fs->win; szb = 1;	/* Use window buffer (many single-sector writes may take a time) */
-		for (n = 0; n < fs->csize && m_diskio->write(fs->pdrv, ibuf, sect + n, szb) == DiskioBase::DRESULT::RES_OK; n += szb) ;	/* Fill the cluster with 0 */
+		for (n = 0; n < fs->csize && m_diskio->write(fs->pdrv, ibuf, sect + n, szb) == DiskioHardwareBase::DRESULT::RES_OK; n += szb) ;	/* Fill the cluster with 0 */
 	}
 	return (n == fs->csize) ? FR_OK : FR_DISK_ERR;
 }

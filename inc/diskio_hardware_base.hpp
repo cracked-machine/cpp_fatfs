@@ -40,25 +40,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef __DISKIO_BASE_HPP__
-#define __DISKIO_BASE_HPP__
+#ifndef __DISKIO_HARDWARE_BASE_HPP__
+#define __DISKIO_HARDWARE_BASE_HPP__
 
 #include <ff_types.hpp>	
-#include <fatfs_spi_device.hpp>
+
 
 namespace fatfs {
 
-enum class DiskioType 
-{
-    MMC,
-    USB,
-    RAM
-};
-class DiskioBase {
+
+class DiskioHardwareBase {
 
 public:
 
-    DiskioBase() = default;
+    DiskioHardwareBase() = default;
 
     using DSTATUS = BYTE;
 
@@ -91,9 +86,7 @@ public:
     static const BYTE MMC_GET_CID		= 12;	/* Get CID */
     static const BYTE MMC_GET_OCR	    = 13;	/* Get OCR */
     static const BYTE MMC_GET_SDSTAT	= 14;	/* Get SD status */
-    static const BYTE ISDIO_READ		= 55;	/* Read data form SD iSDIO register */
-    static const BYTE ISDIO_WRITE		= 56;	/* Write data to SD iSDIO register */
-    static const BYTE ISDIO_MRITE		= 57;	/* Masked write data to SD iSDIO register */
+
 
     /* ATA/CF specific ioctl command */
     static const BYTE ATA_GET_REV		= 20;	/* Get F/W revision */
@@ -110,4 +103,4 @@ public:
 } // namespace fatfs
 
 
-#endif // __DISKIO_BASE_HPP__
+#endif // __DISKIO_HARDWARE_BASE_HPP__

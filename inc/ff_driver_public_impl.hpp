@@ -77,27 +77,38 @@ FRESULT Driver<IOTYPE>::f_mount (
 	if (vol < 0) return FR_INVALID_DRIVE;
 	cfs = FatFs[vol];					/* Pointer to fs object */
 
-	if (cfs) {
-#if FF_FS_LOCK != 0
-		clear_lock(cfs);
-#endif
-#if FF_FS_REENTRANT						/* Discard sync object of the current volume */
-		if (!ff_del_syncobj(cfs->sobj)) return FR_INT_ERR;
-#endif
-		cfs->fs_type = 0;				/* Clear old fs object */
+	if (cfs) 
+	{
+		#if FF_FS_LOCK != 0
+				clear_lock(cfs);
+		#endif
+
+		// Discard sync object of the current volume 
+		#if FF_FS_REENTRANT	
+				if (!ff_del_syncobj(cfs->sobj)) return FR_INT_ERR;
+		#endif
+		// Clear old fs object
+		cfs->fs_type = 0;				
 	}
 
-	if (fs) {
-		fs->fs_type = 0;				/* Clear new fs object */
-#if FF_FS_REENTRANT						/* Create sync object for the new volume */
-		if (!ff_cre_syncobj((BYTE)vol, &fs->sobj)) return FR_INT_ERR;
-#endif
+	if (fs) 
+	{
+		// Clear new fs object 
+		fs->fs_type = 0;				
+		// Create sync object for the new volume 
+		#if FF_FS_REENTRANT						
+				if (!ff_cre_syncobj((BYTE)vol, &fs->sobj)) return FR_INT_ERR;
+		#endif
 	}
-	FatFs[vol] = fs;					/* Register new fs object */
+	// Register new fs object 
+	FatFs[vol] = fs;					
 
-	if (opt == 0) return FR_OK;			/* Do not mount now, it will be mounted later */
+	// Do not mount now, it will be mounted later
+	if (opt == 0) return FR_OK;			
 
-	res = mount_volume(&path, &fs, 0);	/* Force mounted the volume */
+	// Force mount the volume, without write-protection
+	res = mount_volume(&path, &fs, 0);	
+
 	LEAVE_FF(fs, res);
 }
 
@@ -117,11 +128,11 @@ FRESULT Driver<IOTYPE>::f_open (
 	FRESULT res;
 	DIR dj;
 	FATFS *fs;
-#if !FF_FS_READONLY
-	DWORD cl, bcs, clst, tm;
-	LBA_t sc;
-	FSIZE_t ofs;
-#endif
+	#if !FF_FS_READONLY
+		DWORD cl, bcs, clst, tm;
+		LBA_t sc;
+		FSIZE_t ofs;
+	#endif
 	DEF_NAMBUF
 
 
@@ -279,7 +290,7 @@ FRESULT Driver<IOTYPE>::f_open (
 					} else {
 						fp->sect = sc + (DWORD)(ofs / SS(fs));
 #if !FF_FS_TINY
-						if (m_diskio->read(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) res = FR_DISK_ERR;
+						if (m_diskio->read(fs->pdrv, fp->buf, fp->sect, 1) != DiskioHardwareBase::DRESULT::RES_OK) res = FR_DISK_ERR;
 #endif
 					}
 				}
@@ -356,7 +367,7 @@ FRESULT Driver<IOTYPE>::f_read (
 				if (csect + cc > fs->csize) {	/* Clip at cluster boundary */
 					cc = fs->csize - csect;
 				}
-				if (m_diskio->read(fs->pdrv, rbuff, sect, cc) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+				if (m_diskio->read(fs->pdrv, rbuff, sect, cc) != DiskioHardwareBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 #if !FF_FS_READONLY && FF_FS_MINIMIZE <= 2		/* Replace one of the read sectors with cached data if it contains a dirty sector */
 #if FF_FS_TINY
 				if (fs->wflag && fs->winsect - sect < cc) {
@@ -375,11 +386,11 @@ FRESULT Driver<IOTYPE>::f_read (
 			if (fp->sect != sect) {			/* Load data sector if not in cache */
 #if !FF_FS_READONLY
 				if (fp->flag & FA_DIRTY) {		/* Write-back dirty sector cache */
-					if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+					if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioHardwareBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 					fp->flag &= (BYTE)~FA_DIRTY;
 				}
 #endif
-				if (m_diskio->read(fs->pdrv, fp->buf, sect, 1) != DiskioBase::DRESULT::RES_OK)	ABORT(fs, FR_DISK_ERR);	/* Fill sector cache */
+				if (m_diskio->read(fs->pdrv, fp->buf, sect, 1) != DiskioHardwareBase::DRESULT::RES_OK)	ABORT(fs, FR_DISK_ERR);	/* Fill sector cache */
 			}
 #endif
 			fp->sect = sect;
@@ -459,7 +470,7 @@ FRESULT Driver<IOTYPE>::f_write (
 			if (fs->winsect == fp->sect && sync_window(fs) != FR_OK) ABORT(fs, FR_DISK_ERR);	/* Write-back sector cache */
 #else
 			if (fp->flag & FA_DIRTY) {		/* Write-back sector cache */
-				if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+				if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioHardwareBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 				fp->flag &= (BYTE)~FA_DIRTY;
 			}
 #endif
@@ -471,7 +482,7 @@ FRESULT Driver<IOTYPE>::f_write (
 				if (csect + cc > fs->csize) {	/* Clip at cluster boundary */
 					cc = fs->csize - csect;
 				}
-				if (m_diskio->write(fs->pdrv, wbuff, sect, cc) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+				if (m_diskio->write(fs->pdrv, wbuff, sect, cc) != DiskioHardwareBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 #if FF_FS_MINIMIZE <= 2
 #if FF_FS_TINY
 				if (fs->winsect - sect < cc) {	/* Refill sector cache if it gets invalidated by the direct write */
@@ -496,7 +507,7 @@ FRESULT Driver<IOTYPE>::f_write (
 #else
 			if (fp->sect != sect && 		/* Fill sector cache with file data */
 				fp->fptr < fp->obj.objsize &&
-				m_diskio->read(fs->pdrv, fp->buf, sect, 1) != DiskioBase::DRESULT::RES_OK) {
+				m_diskio->read(fs->pdrv, fp->buf, sect, 1) != DiskioHardwareBase::DRESULT::RES_OK) {
 					ABORT(fs, FR_DISK_ERR);
 			}
 #endif
@@ -541,7 +552,7 @@ FRESULT Driver<IOTYPE>::f_sync (
 		if (fp->flag & FA_MODIFIED) {	/* Is there any change to the file? */
 #if !FF_FS_TINY
 			if (fp->flag & FA_DIRTY) {	/* Write-back cached data if needed */
-				if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_FF(fs, FR_DISK_ERR);
+				if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_FF(fs, FR_DISK_ERR);
 				fp->flag &= (BYTE)~FA_DIRTY;
 			}
 #endif
@@ -887,11 +898,11 @@ FRESULT Driver<IOTYPE>::f_lseek (
 #if !FF_FS_TINY
 #if !FF_FS_READONLY
 					if (fp->flag & FA_DIRTY) {		/* Write-back dirty sector cache */
-						if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+						if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioHardwareBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 						fp->flag &= (BYTE)~FA_DIRTY;
 					}
 #endif
-					if (m_diskio->read(fs->pdrv, fp->buf, dsc, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);	/* Load current sector */
+					if (m_diskio->read(fs->pdrv, fp->buf, dsc, 1) != DiskioHardwareBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);	/* Load current sector */
 #endif
 					fp->sect = dsc;
 				}
@@ -967,11 +978,11 @@ FRESULT Driver<IOTYPE>::f_lseek (
 #if !FF_FS_TINY
 #if !FF_FS_READONLY
 			if (fp->flag & FA_DIRTY) {			/* Write-back dirty sector cache */
-				if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+				if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioHardwareBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 				fp->flag &= (BYTE)~FA_DIRTY;
 			}
 #endif
-			if (m_diskio->read(fs->pdrv, fp->buf, nsect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);	/* Fill sector cache */
+			if (m_diskio->read(fs->pdrv, fp->buf, nsect, 1) != DiskioHardwareBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);	/* Fill sector cache */
 #endif
 			fp->sect = nsect;
 		}
@@ -1328,7 +1339,7 @@ FRESULT Driver<IOTYPE>::f_truncate (
 		fp->flag |= FA_MODIFIED;
 #if !FF_FS_TINY
 		if (res == FR_OK && (fp->flag & FA_DIRTY)) {
-			if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) {
+			if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioHardwareBase::DRESULT::RES_OK) {
 				res = FR_DISK_ERR;
 			} else {
 				fp->flag &= (BYTE)~FA_DIRTY;
@@ -2082,11 +2093,11 @@ FRESULT Driver<IOTYPE>::f_forward (
 		if (fp->sect != sect) {		/* Fill sector cache with file data */
 #if !FF_FS_READONLY
 			if (fp->flag & FA_DIRTY) {		/* Write-back dirty sector cache */
-				if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+				if (m_diskio->write(fs->pdrv, fp->buf, fp->sect, 1) != DiskioHardwareBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 				fp->flag &= (BYTE)~FA_DIRTY;
 			}
 #endif
-			if (m_diskio->read(fs->pdrv, fp->buf, sect, 1) != DiskioBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
+			if (m_diskio->read(fs->pdrv, fp->buf, sect, 1) != DiskioHardwareBase::DRESULT::RES_OK) ABORT(fs, FR_DISK_ERR);
 		}
 		dbuf = fp->buf;
 #endif
@@ -2129,7 +2140,7 @@ FRESULT Driver<IOTYPE>::create_partition (
 	BYTE hd, n_hd, sc, n_sc;
 
 	/* Get physical drive size */
-	if (m_diskio->ioctl(drv, DiskioBase::GET_SECTOR_COUNT, &sz_drv) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;
+	if (m_diskio->ioctl(drv, DiskioHardwareBase::GET_SECTOR_COUNT, &sz_drv) != DiskioHardwareBase::DRESULT::RES_OK) return FR_DISK_ERR;
 
 #if FF_LBA64
 	if (sz_drv >= FF_MIN_GPT) {	/* Create partitions in GPT format */
@@ -2140,7 +2151,7 @@ FRESULT Driver<IOTYPE>::create_partition (
 		static const BYTE gpt_mbr[16] = {0x00, 0x00, 0x02, 0x00, 0xEE, 0xFE, 0xFF, 0x00, 0x01, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF};
 
 #if FF_MAX_SS != FF_MIN_SS
-		if (m_diskio->ioctl(drv, GET_SECTOR_SIZE, &ss) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;	/* Get sector size */
+		if (m_diskio->ioctl(drv, GET_SECTOR_SIZE, &ss) != DiskioHardwareBase::DRESULT::RES_OK) return FR_DISK_ERR;	/* Get sector size */
 		if (ss > FF_MAX_SS || ss < FF_MIN_SS || (ss & (ss - 1))) return FR_DISK_ERR;
 #else
 		ss = FF_MAX_SS;
@@ -2176,8 +2187,8 @@ FRESULT Driver<IOTYPE>::create_partition (
 			}
 			if ((pi + 1) * SZ_GPTE % ss == 0) {		/* Write the buffer if it is filled up */
 				for (i = 0; i < ss; bcc = crc32(bcc, buf[i++])) ;	/* Calculate table check sum */
-				if (m_diskio->write(drv, buf, 2 + pi * SZ_GPTE / ss, 1) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;		/* Write to primary table */
-				if (m_diskio->write(drv, buf, top_bpt + pi * SZ_GPTE / ss, 1) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;	/* Write to secondary table */
+				if (m_diskio->write(drv, buf, 2 + pi * SZ_GPTE / ss, 1) != DiskioHardwareBase::DRESULT::RES_OK) return FR_DISK_ERR;		/* Write to primary table */
+				if (m_diskio->write(drv, buf, top_bpt + pi * SZ_GPTE / ss, 1) != DiskioHardwareBase::DRESULT::RES_OK) return FR_DISK_ERR;	/* Write to secondary table */
 			}
 		} while (++pi < GPT_ITEMS);
 
@@ -2195,7 +2206,7 @@ FRESULT Driver<IOTYPE>::create_partition (
 		rnd = make_rand(rnd, buf + GPTH_DskGuid, 16);	/* Disk GUID */
 		for (i = 0, bcc= 0xFFFFFFFF; i < 92; bcc = crc32(bcc, buf[i++])) ;	/* Calculate header check sum */
 		st_dword(buf + GPTH_Bcc, ~bcc);				/* Header check sum */
-		if (m_diskio->write(drv, buf, 1, 1) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;
+		if (m_diskio->write(drv, buf, 1, 1) != DiskioHardwareBase::DRESULT::RES_OK) return FR_DISK_ERR;
 
 		/* Create secondary GPT header */
 		st_qword(buf + GPTH_CurLba, sz_drv - 1);	/* LBA of this header */
@@ -2204,13 +2215,13 @@ FRESULT Driver<IOTYPE>::create_partition (
 		st_dword(buf + GPTH_Bcc, 0);
 		for (i = 0, bcc= 0xFFFFFFFF; i < 92; bcc = crc32(bcc, buf[i++])) ;	/* Calculate header check sum */
 		st_dword(buf + GPTH_Bcc, ~bcc);				/* Header check sum */
-		if (m_diskio->write(drv, buf, sz_drv - 1, 1) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;
+		if (m_diskio->write(drv, buf, sz_drv - 1, 1) != DiskioHardwareBase::DRESULT::RES_OK) return FR_DISK_ERR;
 
 		/* Create protective MBR */
 		std::memset(buf, 0, ss);
 		memcpy(buf + MBR_Table, gpt_mbr, 16);		/* Create a GPT partition */
 		st_word(buf + BS_55AA, 0xAA55);
-		if (m_diskio->write(drv, buf, 0, 1) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;
+		if (m_diskio->write(drv, buf, 0, 1) != DiskioHardwareBase::DRESULT::RES_OK) return FR_DISK_ERR;
 
 	} else
 #endif
@@ -2250,7 +2261,7 @@ FRESULT Driver<IOTYPE>::create_partition (
 		}
 
 		st_word(buf + BS_55AA, 0xAA55);		/* MBR signature */
-		if (m_diskio->write(drv, buf, 0, 1) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;	/* Write it to the MBR */
+		if (m_diskio->write(drv, buf, 0, 1) != DiskioHardwareBase::DRESULT::RES_OK) return FR_DISK_ERR;	/* Write it to the MBR */
 	}
 
 	return FR_OK;
@@ -2276,7 +2287,7 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 	DWORD sz_rsv, sz_fat, sz_dir, sz_au;	/* Size of reserved, fat, dir, data, cluster */
 	UINT n_fat, n_root, i;					/* Index, Number of FATs and Number of roor dir entries */
 	int vol;
-	DiskioBase::DSTATUS ds;
+	DiskioHardwareBase::DSTATUS ds;
 	FRESULT fr;
 
 
@@ -2290,13 +2301,13 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 
 	/* Get physical drive status (sz_drv, sz_blk, ss) */
 	ds = m_diskio->initialize(pdrv);
-	if (ds & DiskioBase::STA_NOINIT) return FR_NOT_READY;
-	if (ds & DiskioBase::STA_PROTECT) return FR_WRITE_PROTECTED;
+	if (ds & DiskioHardwareBase::STA_NOINIT) return FR_NOT_READY;
+	if (ds & DiskioHardwareBase::STA_PROTECT) return FR_WRITE_PROTECTED;
 	sz_blk = opt->align;
-	if (sz_blk == 0 && m_diskio->ioctl(pdrv, DiskioBase::GET_BLOCK_SIZE, &sz_blk) != DiskioBase::DRESULT::RES_OK) sz_blk = 1;
+	if (sz_blk == 0 && m_diskio->ioctl(pdrv, DiskioHardwareBase::GET_BLOCK_SIZE, &sz_blk) != DiskioHardwareBase::DRESULT::RES_OK) sz_blk = 1;
  	if (sz_blk == 0 || sz_blk > 0x8000 || (sz_blk & (sz_blk - 1))) sz_blk = 1;
 #if FF_MAX_SS != FF_MIN_SS
-	if (m_diskio->ioctl(pdrv, GET_SECTOR_SIZE, &ss) != DiskioBase::DRESULT::RES_OK) return FR_DISK_ERR;
+	if (m_diskio->ioctl(pdrv, GET_SECTOR_SIZE, &ss) != DiskioHardwareBase::DRESULT::RES_OK) return FR_DISK_ERR;
 	if (ss > FF_MAX_SS || ss < FF_MIN_SS || (ss & (ss - 1))) return FR_DISK_ERR;
 #else
 	ss = FF_MAX_SS;
@@ -2321,7 +2332,7 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 	b_vol = sz_vol = 0;
 	if (FF_MULTI_PARTITION && ipart != 0) {	/* Is the volume associated with any specific partition? */
 		/* Get partition location from the existing partition table */
-		if (m_diskio->read(pdrv, buf, 0, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Load MBR */
+		if (m_diskio->read(pdrv, buf, 0, 1) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Load MBR */
 		if (ld_word(buf + BS_55AA) != 0xAA55) LEAVE_MKFS(FR_MKFS_ABORTED);	/* Check if MBR is valid */
 #if FF_LBA64
 		if (buf[MBR_Table + PTE_System] == 0xEE) {	/* GPT protective MBR? */
@@ -2329,13 +2340,13 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 			QWORD pt_lba;
 
 			/* Get the partition location from GPT */
-			if (m_diskio->read(pdrv, buf, 1, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Load GPT header sector (next to MBR) */
+			if (m_diskio->read(pdrv, buf, 1, 1) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Load GPT header sector (next to MBR) */
 			if (!test_gpt_header(buf)) LEAVE_MKFS(FR_MKFS_ABORTED);	/* Check if GPT header is valid */
 			n_ent = ld_dword(buf + GPTH_PtNum);		/* Number of entries */
 			pt_lba = ld_qword(buf + GPTH_PtOfs);	/* Table start sector */
 			ofs = i = 0;
 			while (n_ent) {		/* Find MS Basic partition with order of ipart */
-				if (ofs == 0 && m_diskio->read(pdrv, buf, pt_lba++, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Get PT sector */
+				if (ofs == 0 && m_diskio->read(pdrv, buf, pt_lba++, 1) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Get PT sector */
 				if (!memcmp(buf + ofs + GPTE_PtGuid, GUID_MS_Basic, 16) && ++i == ipart) {	/* MS basic data partition? */
 					b_vol = ld_qword(buf + ofs + GPTE_FstLba);
 					sz_vol = ld_qword(buf + ofs + GPTE_LstLba) - b_vol + 1;
@@ -2354,7 +2365,7 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 			sz_vol = ld_dword(pte + PTE_SizLba);	/* Get volume size */
 		}
 	} else {	/* The volume is associated with a physical drive */
-		if (m_diskio->ioctl(pdrv, DiskioBase::GET_SECTOR_COUNT, &sz_vol) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+		if (m_diskio->ioctl(pdrv, DiskioHardwareBase::GET_SECTOR_COUNT, &sz_vol) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 		if (!(fsopt & FM_SFD)) {	/* To be partitioned? */
 			/* Create a single-partition on the drive in this function */
 #if FF_LBA64
@@ -2404,7 +2415,7 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 		if (sz_vol < 0x1000) LEAVE_MKFS(FR_MKFS_ABORTED);	/* Too small volume for exFAT? */
 #if FF_USE_TRIM
 		lba[0] = b_vol; lba[1] = b_vol + sz_vol - 1;	/* Inform storage device that the volume area may be erased */
-		m_diskio->ioctl(pdrv, DiskioBase::CTRL_TRIM, lba);
+		m_diskio->ioctl(pdrv, DiskioHardwareBase::CTRL_TRIM, lba);
 #endif
 		/* Determine FAT location, data location and number of clusters */
 		if (sz_au == 0) {	/* AU auto-selection */
@@ -2454,7 +2465,7 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 			i += 2; szb_case += 2;
 			if (si == 0 || i == sz_buf * ss) {		/* Write buffered data when buffer full or end of process */
 				n = (i + ss - 1) / ss;
-				if (m_diskio->write(pdrv, buf, sect, n) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+				if (m_diskio->write(pdrv, buf, sect, n) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 				sect += n; i = 0;
 			}
 		} while (si);
@@ -2468,7 +2479,7 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 			std::memset(buf, 0, sz_buf * ss);				/* Initialize bitmap buffer */
 			for (i = 0; nbit != 0 && i / 8 < sz_buf * ss; buf[i / 8] |= 1 << (i % 8), i++, nbit--) ;	/* Mark used clusters */
 			n = (nsect > sz_buf) ? sz_buf : nsect;		/* Write the buffered data */
-			if (m_diskio->write(pdrv, buf, sect, n) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+			if (m_diskio->write(pdrv, buf, sect, n) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			sect += n; nsect -= n;
 		} while (nsect);
 
@@ -2489,7 +2500,7 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 				if (nbit == 0 && j < 3) nbit = clen[j++];	/* Get next chain length */
 			} while (nbit != 0 && i < sz_buf * ss);
 			n = (nsect > sz_buf) ? sz_buf : nsect;	/* Write the buffered data */
-			if (m_diskio->write(pdrv, buf, sect, n) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+			if (m_diskio->write(pdrv, buf, sect, n) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			sect += n; nsect -= n;
 		} while (nsect);
 
@@ -2506,7 +2517,7 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 		sect = b_data + sz_au * (clen[0] + clen[1]); nsect = sz_au;	/* Start of the root directory and number of sectors */
 		do {	/* Fill root directory sectors */
 			n = (nsect > sz_buf) ? sz_buf : nsect;
-			if (m_diskio->write(pdrv, buf, sect, n) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+			if (m_diskio->write(pdrv, buf, sect, n) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			std::memset(buf, 0, ss);	/* Rest of entries are filled with zero */
 			sect += n; nsect -= n;
 		} while (nsect);
@@ -2535,23 +2546,23 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 			for (i = sum = 0; i < ss; i++) {		/* VBR checksum */
 				if (i != BPB_VolFlagEx && i != BPB_VolFlagEx + 1 && i != BPB_PercInUseEx) sum = xsum32(buf[i], sum);
 			}
-			if (m_diskio->write(pdrv, buf, sect++, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+			if (m_diskio->write(pdrv, buf, sect++, 1) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			/* Extended bootstrap record (+1..+8) */
 			std::memset(buf, 0, ss);
 			st_word(buf + ss - 2, 0xAA55);	/* Signature (placed at end of sector) */
 			for (j = 1; j < 9; j++) {
 				for (i = 0; i < ss; sum = xsum32(buf[i++], sum)) ;	/* VBR checksum */
-				if (m_diskio->write(pdrv, buf, sect++, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+				if (m_diskio->write(pdrv, buf, sect++, 1) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			}
 			/* OEM/Reserved record (+9..+10) */
 			std::memset(buf, 0, ss);
 			for ( ; j < 11; j++) {
 				for (i = 0; i < ss; sum = xsum32(buf[i++], sum)) ;	/* VBR checksum */
-				if (m_diskio->write(pdrv, buf, sect++, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+				if (m_diskio->write(pdrv, buf, sect++, 1) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			}
 			/* Sum record (+11) */
 			for (i = 0; i < ss; i += 4) st_dword(buf + i, sum);		/* Fill with checksum value */
-			if (m_diskio->write(pdrv, buf, sect++, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+			if (m_diskio->write(pdrv, buf, sect++, 1) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 		}
 
 	} else
@@ -2633,7 +2644,7 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 
 #if FF_USE_TRIM
 		lba[0] = b_vol; lba[1] = b_vol + sz_vol - 1;	/* Inform storage device that the volume area may be erased */
-		m_diskio->ioctl(pdrv, DiskioBase::CTRL_TRIM, lba);
+		m_diskio->ioctl(pdrv, DiskioHardwareBase::CTRL_TRIM, lba);
 #endif
 		/* Create FAT VBR */
 		std::memset(buf, 0, ss);
@@ -2669,7 +2680,7 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 			memcpy(buf + BS_VolLab, "NO NAME    " "FAT     ", 19);	/* Volume label, FAT signature */
 		}
 		st_word(buf + BS_55AA, 0xAA55);					/* Signature (offset is fixed here regardless of sector size) */
-		if (m_diskio->write(pdrv, buf, b_vol, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Write it to the VBR sector */
+		if (m_diskio->write(pdrv, buf, b_vol, 1) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Write it to the VBR sector */
 
 		/* Create FSINFO record if needed */
 		if (fsty == FS_FAT32) {
@@ -2698,7 +2709,7 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 			nsect = sz_fat;		/* Number of FAT sectors */
 			do {	/* Fill FAT sectors */
 				n = (nsect > sz_buf) ? sz_buf : nsect;
-				if (m_diskio->write(pdrv, buf, sect, (UINT)n) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+				if (m_diskio->write(pdrv, buf, sect, (UINT)n) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 				std::memset(buf, 0, ss);	/* Rest of FAT all are cleared */
 				sect += n; nsect -= n;
 			} while (nsect);
@@ -2708,7 +2719,7 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 		nsect = (fsty == FS_FAT32) ? pau : sz_dir;	/* Number of root directory sectors */
 		do {
 			n = (nsect > sz_buf) ? sz_buf : nsect;
-			if (m_diskio->write(pdrv, buf, sect, (UINT)n) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+			if (m_diskio->write(pdrv, buf, sect, (UINT)n) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 			sect += n; nsect -= n;
 		} while (nsect);
 	}
@@ -2734,9 +2745,9 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 	if (FF_MULTI_PARTITION && ipart != 0) {	/* Volume is in the existing partition */
 		if (!FF_LBA64 || !(fsopt & 0x80)) {
 			/* Update system ID in the partition table */
-			if (m_diskio->read(pdrv, buf, 0, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Read the MBR */
+			if (m_diskio->read(pdrv, buf, 0, 1) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Read the MBR */
 			buf[MBR_Table + (ipart - 1) * SZ_PTE + PTE_System] = sys;			/* Set system ID */
-			if (m_diskio->write(pdrv, buf, 0, 1) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Write it back to the MBR */
+			if (m_diskio->write(pdrv, buf, 0, 1) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);	/* Write it back to the MBR */
 		}
 	} else {								/* Volume as a new single partition */
 		if (!(fsopt & FM_SFD)) {			/* Create partition table if not in SFD */
@@ -2746,7 +2757,7 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 		}
 	}
 
-	if (m_diskio->ioctl(pdrv, DiskioBase::CTRL_SYNC, 0) != DiskioBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
+	if (m_diskio->ioctl(pdrv, DiskioHardwareBase::CTRL_SYNC, 0) != DiskioHardwareBase::DRESULT::RES_OK) LEAVE_MKFS(FR_DISK_ERR);
 
 	LEAVE_MKFS(FR_OK);
 }
@@ -2766,12 +2777,12 @@ FRESULT Driver<IOTYPE>::f_fdisk (
 )
 {
 	BYTE *buf = (BYTE*)work;
-	DiskioBase::DSTATUS stat;
+	DiskioHardwareBase::DSTATUS stat;
 
 
 	stat = m_diskio->initialize(pdrv);
-	if (stat & DiskioBase::STA_NOINIT) return FR_NOT_READY;
-	if (stat & DiskioBase::STA_PROTECT) return FR_WRITE_PROTECTED;
+	if (stat & DiskioHardwareBase::STA_NOINIT) return FR_NOT_READY;
+	if (stat & DiskioHardwareBase::STA_PROTECT) return FR_WRITE_PROTECTED;
 #if FF_USE_LFN == 3
 	if (!buf) buf = ff_memalloc(FF_MAX_SS);	/* Use heap memory for working buffer */
 #endif

@@ -21,8 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef __FATFS_SPI_DEVICE_HPP__
-#define __FATFS_SPI_DEVICE_HPP__
+#ifndef __DISKIO_PROTOCOL_SPI_HPP__
+#define __DISKIO_PROTOCOL_SPI_HPP__
 
 
 #if defined(X86_UNIT_TESTING_ONLY)
@@ -42,12 +42,14 @@
 namespace fatfs
 {
 
+#if defined(ENABLE_MMC_SPI)	
+
 // @brief contains pointer to SPI peripheral and associated GPIO ports/pins (as defined in CMSIS)
-class DriverInterfaceSPI 
+class DiskioProtocolSPI 
 {
 public:
     // @brief Construct a new Driver Serial Interface object
-    // @param led_spi           The SPI peripheral e.g. SPI2
+    // @param spi           The SPI peripheral e.g. SPI2
     // @param lat_port          The CS port e.g. GPIOB
     // @param lat_pin           The CS pin e.g. LL_GPIO_PIN_9
     // @param mosi_port         The MOSI port e.g. GPIOB
@@ -57,15 +59,15 @@ public:
     // @param sck_port          The serial clock port e.g. GPIOB
     // @param sck_pin           The serial clock pin e.g. LL_GPIO_PIN_8
     // @param rcc_spi_clk       The bit to enable the SPI RCC (RCC_APBENR1) for the MOSI/SCK port e.g. LL_APB1_GRP1_PERIPH_SPI2
-	DriverInterfaceSPI(
-        SPI_TypeDef *led_spi, 
+	DiskioProtocolSPI(
+        SPI_TypeDef *spi, 
         std::pair<GPIO_TypeDef*, uint16_t>  cs_gpio,    
         std::pair<GPIO_TypeDef*, uint16_t>  mosi_gpio,   
         std::pair<GPIO_TypeDef*, uint16_t>  miso_gpio,    
         std::pair<GPIO_TypeDef*, uint16_t>  sck_gpio,          
         uint32_t rcc_spi_clk
     )  
-	:   m_spi(led_spi), 
+	:   m_spi(spi), 
         m_cs_port(cs_gpio.first), m_cs_pin(cs_gpio.second),           	// init cs port+pin
         m_mosi_port(mosi_gpio.first), m_mosi_pin(mosi_gpio.second),     // init mosi port+pin 
         m_miso_port(miso_gpio.first), m_miso_pin(miso_gpio.second),     // init mosi port+pin 
@@ -107,6 +109,8 @@ private:
     uint32_t m_rcc_spi_clk;
 };
 
-} // namespace tlc5955
+#endif // #if defined(ENABLE_MMC_SPI)
 
-#endif // __FATFS_SPI_DEVICE_HPP__
+} // namespace fatfs
+
+#endif // __DISKIO_PROTOCOL_SPI_HPP__

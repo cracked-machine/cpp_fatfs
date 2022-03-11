@@ -5,16 +5,16 @@ The main architecture consists of a public API that uses a lower level disk IO l
 
 ![](doc/cpp_fatfs-BlockDiagram.png)
 
-Details of the STM32 SPI interface (SPI_TypeDef, GPIO ports and pins) are passed as a `DriverInterfaceSPI` object into the `DiskioMMC` class.  The `DiskioMMC` object is then passed into the main `Driver` API class. A `FileManager` class can be used to manage the `DiskioMMC` and `Driver` objects.
+Details of the STM32 SPI interface (SPI_TypeDef, GPIO ports and pins) are passed as a `DriverInterfaceSPI` object into the `DiskioHardwareMMC` class.  The `DiskioHardwareMMC` object is then passed into the main `Driver` API class. A `FileManager` class can be used to manage the `DiskioHardwareMMC` and `Driver` objects.
 
 ![](doc/cpp_fatfs-InitSequence.png)
 
 <!-- @startuml
 MainApp -> DriverInterfaceSPI ** : create
 MainApp -> FileManager ** : create(DriverInterfaceSPI)
-FileManager -> DiskioMMC ** : create(DriverInterfaceSPI)
-FileManager -> "Driver<DiskioMMC>" ** : create(DiskioMMC)
-"Driver<DiskioMMC>" -> "Driver<DiskioMMC>" : unique_ptr<DiskioMMC>
+FileManager -> DiskioHardwareMMC ** : create(DriverInterfaceSPI)
+FileManager -> "Driver<DiskioHardwareMMC>" ** : create(DiskioHardwareMMC)
+"Driver<DiskioHardwareMMC>" -> "Driver<DiskioHardwareMMC>" : unique_ptr<DiskioHardwareMMC>
 @enduml -->
 
 ### CMake
@@ -29,7 +29,7 @@ add_subdirectory(cpp_fatfs)
 ```
 #include <diskio.hpp>
 
-fatfs::DiskioMMC diskio;
+fatfs::DiskioHardwareMMC diskio;
 fatfs::Driver fatfs_handle(diskio);
 fatfs::FATFS fs;
 fatfs::FIL fil;

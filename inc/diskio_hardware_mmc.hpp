@@ -41,40 +41,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <diskio_base.hpp>
+#ifndef __DISKIO_HARDWARE_MMC_HPP__
+#define __DISKIO_HARDWARE_MMC_HPP__
 
-
+#include <diskio_hardware_base.hpp>
+#include <diskio_protocol_spi.hpp>
+#include <diskio_protocol_sdio.hpp>
 
 namespace fatfs {
 
-DiskioBase::DSTATUS DiskioBase::initialize(BYTE pdrv [[maybe_unused]]) 
+template<typename PROTOCOL>
+class DiskioHardwareMMC : public DiskioHardwareBase
 {
-    DSTATUS res = 0;
-    return res;
-}
+public:
+    DiskioHardwareMMC(PROTOCOL &periph_interface);
+    void periph_init();
+    DSTATUS initialize(BYTE pdrv) override;
+    DSTATUS status(BYTE pdrv) override;
+    DRESULT read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count) override;
+    DRESULT write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count) override;
+    DRESULT ioctl (BYTE pdrv, BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]]) override;
 
-DiskioBase::DSTATUS DiskioBase::status(BYTE pdrv [[maybe_unused]]) 
-{
-    DSTATUS res = 0;
-    return res;
-}
+private:
+    PROTOCOL m_periph_interface;
+};
 
-DiskioBase::DRESULT DiskioBase::read(BYTE pdrv [[maybe_unused]], BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
-{
-    return DRESULT::RES_OK;
-}
+#if defined(ENABLE_MMC_SPI)
+using DiskIO_MMC_SPI = fatfs::DiskioHardwareMMC<fatfs::DiskioProtocolSPI>;
+#endif 
 
-DiskioBase::DRESULT DiskioBase::write(BYTE pdrv [[maybe_unused]], const BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
-{
-    return DRESULT::RES_OK;
-}
+#if defined(ENABLE_MMC_SDIO)
+using DiskIO_MMC_SDIO = fatfs::DiskioHardwareMMC<fatfs::DiskioProtocolSDIO>;
+#endif
 
-DiskioBase::DRESULT DiskioBase::ioctl (BYTE pdrv [[maybe_unused]], BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]])
-{
-    return DRESULT::RES_OK;
-}
+} // namespace fatfs 
 
-
-} // namespace fatfs
-
-
+#endif // __DISKIO_HARDWARE_MMC_HPP__

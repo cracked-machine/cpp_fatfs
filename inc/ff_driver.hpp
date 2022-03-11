@@ -43,8 +43,8 @@
 #ifndef __FF_DRIVER_HPP__
 #define __FF_DRIVER_HPP__
 
-#include <diskio_usb.hpp>
-#include <diskio_mmc.hpp>
+#include <diskio_hardware_usb.hpp>
+#include <diskio_hardware_mmc.hpp>
 #include <ff_driver_common.hpp>
 
 
@@ -54,7 +54,7 @@ namespace fatfs {
 #define FF_DEFINED	86631	/* Revision ID */
 
 /// @brief Main class for FatFS public API
-/// @tparam IOTYPE Must be a derived type of DiskioBase
+/// @tparam IOTYPE Must be a derived type of DiskioHardwareBase
 template<typename IOTYPE>
 class Driver : public DriverCommon 
 {
@@ -131,8 +131,8 @@ public:
 private:
 	/// @brief The low-layer Disk IO implementation object. 
 	/// Assign using c'tor with a derived type that matches this template class specialization.
-	/// e.g. DiskioMMC should be used with Driver<DiskioMMC>
-	std::unique_ptr<DiskioBase> m_diskio;
+	/// e.g. DiskioHardwareMMC should be used with Driver<DiskioHardwareMMC>
+	std::unique_ptr<DiskioHardwareBase> m_diskio;
 
 	#if !FF_FS_READONLY
 		/// @brief Flush disk access window in the filesystem object  
@@ -340,8 +340,8 @@ private:
 	/// @brief Determine logical drive number and mount the volume if needed
 	/// @param path Pointer to pointer to the path name (drive number) 
 	/// @param rfs Pointer to pointer to the found filesystem object
-	/// @param mode FR_OK(0): successful, !=0: an error occurred
-	/// @return FRESULT !=0: Check write protection for write access 
+	/// @param mode !=0: Check write protection for write access 
+	/// @return FRESULT FR_OK(0): successful, !=0: an error occurred
 	FRESULT mount_volume (const TCHAR** path, FATFS** rfs, BYTE mode);
 
 	/// @brief Check if the file/directory object is valid or not
@@ -449,11 +449,11 @@ private:
 
 };
 
-/// @brief Template specialization for MMC types
-using DriverSPI = Driver<DiskioMMC>;
+/// @brief Template specialization for MMC types using SPI
+using DriverSPI = Driver<DiskIO_MMC_SPI>;
 
 /// @brief Constructor for Driver
-/// @tparam IOTYPE Must be a derived type of DiskioBase
+/// @tparam IOTYPE Must be a derived type of DiskioHardwareBase
 /// @param diskio The low-level Disk IO implementation
 template<typename IOTYPE>
 Driver<IOTYPE>::Driver(IOTYPE &diskio)
