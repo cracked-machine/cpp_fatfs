@@ -49,11 +49,11 @@
 
 namespace fatfs {
 
-template<typename PROTOCOL>
+template<typename DISKIO_PROTOCOL>
 class DiskioHardwareUSB : public DiskioHardwareBase
 {
 public:
-    DiskioHardwareUSB(PROTOCOL &protocol_interface);
+    DiskioHardwareUSB(DISKIO_PROTOCOL &protocol_interface);
     void periph_init();
     DSTATUS initialize(BYTE pdrv) override;
     DSTATUS status(BYTE pdrv) override;
@@ -62,7 +62,7 @@ public:
     DRESULT ioctl (BYTE pdrv, BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]]) override;
 
 private:
-    PROTOCOL m_protocol_interface;
+    DISKIO_PROTOCOL m_protocol_interface;
 };
 
 using DiskIO_USB = fatfs::DiskioHardwareUSB<fatfs::DiskioProtocolUSB>;

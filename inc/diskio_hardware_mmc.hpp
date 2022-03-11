@@ -50,11 +50,11 @@
 
 namespace fatfs {
 
-template<typename PROTOCOL>
+template<typename DISKIO_PROTOCOL>
 class DiskioHardwareMMC : public DiskioHardwareBase
 {
 public:
-    DiskioHardwareMMC(PROTOCOL &periph_interface);
+    DiskioHardwareMMC(DISKIO_PROTOCOL &periph_interface);
     void periph_init();
     DSTATUS initialize(BYTE pdrv) override;
     DSTATUS status(BYTE pdrv) override;
@@ -63,7 +63,7 @@ public:
     DRESULT ioctl (BYTE pdrv, BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]]) override;
 
 private:
-    PROTOCOL m_periph_interface;
+    DISKIO_PROTOCOL m_periph_interface;
 };
 
 #if defined(ENABLE_MMC_SPI)

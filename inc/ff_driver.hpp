@@ -54,14 +54,14 @@ namespace fatfs {
 #define FF_DEFINED	86631	/* Revision ID */
 
 /// @brief Main class for FatFS public API
-/// @tparam IOTYPE Must be a derived type of DiskioHardwareBase
-template<typename IOTYPE>
+/// @tparam DISKIO_HW Must be a derived type of DiskioHardwareBase
+template<typename DISKIO_HW>
 class Driver : public DriverCommon 
 {
 
 public:
 
-	Driver(IOTYPE &diskio); 
+	Driver(DISKIO_HW &diskio); 
 
 	FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode);				/* Open or create a file */
 	FRESULT f_close (FIL* fp);											/* Close an open file object */
@@ -453,12 +453,12 @@ private:
 using DriverSPI = Driver<DiskIO_MMC_SPI>;
 
 /// @brief Constructor for Driver
-/// @tparam IOTYPE Must be a derived type of DiskioHardwareBase
+/// @tparam DISKIO_HW Must be a derived type of DiskioHardwareBase
 /// @param diskio The low-level Disk IO implementation
-template<typename IOTYPE>
-Driver<IOTYPE>::Driver(IOTYPE &diskio)
+template<typename DISKIO_HW>
+Driver<DISKIO_HW>::Driver(DISKIO_HW &diskio)
 {
-	m_diskio = std::unique_ptr<IOTYPE>(&diskio);
+	m_diskio = std::unique_ptr<DISKIO_HW>(&diskio);
 }
 
 /*--------------------------------*/

@@ -59,8 +59,8 @@ namespace fatfs
 /*-----------------------------------------------------------------------*/
 /* Mount/Unmount a Logical Drive                                         */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_mount (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_mount (
 	FATFS* fs,			/* Pointer to the filesystem object to be registered (NULL:unmount)*/
 	const TCHAR* path,	/* Logical drive number to be mounted/unmounted */
 	BYTE opt			/* Mount option: 0=Do not mount (delayed mount), 1=Mount immediately */
@@ -118,8 +118,8 @@ FRESULT Driver<IOTYPE>::f_mount (
 /*-----------------------------------------------------------------------*/
 /* Open or Create a File                                                 */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_open (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_open (
 	FIL* fp,			/* Pointer to the blank file object */
 	const TCHAR* path,	/* Pointer to the file name */
 	BYTE mode			/* Access mode and open mode flags */
@@ -315,8 +315,8 @@ FRESULT Driver<IOTYPE>::f_open (
 /*-----------------------------------------------------------------------*/
 /* Read File                                                             */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_read (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_read (
 	FIL* fp, 	/* Open file to be read */
 	void* buff,	/* Data buffer to store the read data */
 	UINT btr,	/* Number of bytes to read */
@@ -415,8 +415,8 @@ FRESULT Driver<IOTYPE>::f_read (
 /*-----------------------------------------------------------------------*/
 /* Write File                                                            */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_write (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_write (
 	FIL* fp,			/* Open file to be written */
 	const void* buff,	/* Data to be written */
 	UINT btw,			/* Number of bytes to write */
@@ -536,8 +536,8 @@ FRESULT Driver<IOTYPE>::f_write (
 /*-----------------------------------------------------------------------*/
 /* Synchronize the File                                                  */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_sync (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_sync (
 	FIL* fp		/* Open file to be synced */
 )
 {
@@ -617,8 +617,8 @@ FRESULT Driver<IOTYPE>::f_sync (
 /*-----------------------------------------------------------------------*/
 /* Close File                                                            */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_close (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_close (
 	FIL* fp		/* Open file to be closed */
 )
 {
@@ -653,8 +653,8 @@ FRESULT Driver<IOTYPE>::f_close (
 /*-----------------------------------------------------------------------*/
 /* Change Current Directory or Current Drive, Get Current Directory      */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_chdrive (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_chdrive (
 	const TCHAR* path		/* Drive number to set */
 )
 {
@@ -670,8 +670,8 @@ FRESULT Driver<IOTYPE>::f_chdrive (
 }
 
 
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_chdir (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_chdir (
 	const TCHAR* path	/* Pointer to the directory path */
 )
 {
@@ -733,8 +733,8 @@ FRESULT Driver<IOTYPE>::f_chdir (
 
 
 #if FF_FS_RPATH >= 2
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_getcwd (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_getcwd (
 	TCHAR* buff,	/* Pointer to the directory path */
 	UINT len		/* Size of buff in unit of TCHAR */
 )
@@ -833,8 +833,8 @@ FRESULT Driver<IOTYPE>::f_getcwd (
 /*-----------------------------------------------------------------------*/
 /* Seek File Read/Write Pointer                                          */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_lseek (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_lseek (
 	FIL* fp,		/* Pointer to the file object */
 	FSIZE_t ofs		/* File pointer from top of file */
 )
@@ -997,8 +997,8 @@ FRESULT Driver<IOTYPE>::f_lseek (
 /*-----------------------------------------------------------------------*/
 /* Create a Directory Object                                             */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_opendir (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_opendir (
 	DIR* dp,			/* Pointer to directory object to create */
 	const TCHAR* path	/* Pointer to the directory path */
 )
@@ -1063,8 +1063,8 @@ FRESULT Driver<IOTYPE>::f_opendir (
 /*-----------------------------------------------------------------------*/
 /* Close Directory                                                       */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_closedir (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_closedir (
 	DIR *dp		/* Pointer to the directory object to be closed */
 )
 {
@@ -1093,8 +1093,8 @@ FRESULT Driver<IOTYPE>::f_closedir (
 /*-----------------------------------------------------------------------*/
 /* Read Directory Entries in Sequence                                    */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_readdir (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_readdir (
 	DIR* dp,			/* Pointer to the open directory object */
 	FILINFO* fno		/* Pointer to file information to return */
 )
@@ -1129,8 +1129,8 @@ FRESULT Driver<IOTYPE>::f_readdir (
 /*-----------------------------------------------------------------------*/
 /* Find Next File                                                        */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_findnext (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_findnext (
 	DIR* dp,		/* Pointer to the open directory object */
 	FILINFO* fno	/* Pointer to the file information structure */
 )
@@ -1154,8 +1154,8 @@ FRESULT Driver<IOTYPE>::f_findnext (
 /*-----------------------------------------------------------------------*/
 /* Find First File                                                       */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_findfirst (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_findfirst (
 	DIR* dp,				/* Pointer to the blank directory object */
 	FILINFO* fno,			/* Pointer to the file information structure */
 	const TCHAR* path,		/* Pointer to the directory to open */
@@ -1181,8 +1181,8 @@ FRESULT Driver<IOTYPE>::f_findfirst (
 /*-----------------------------------------------------------------------*/
 /* Get File Status                                                       */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_stat (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_stat (
 	const TCHAR* path,	/* Pointer to the file path */
 	FILINFO* fno		/* Pointer to file information to return */
 )
@@ -1216,8 +1216,8 @@ FRESULT Driver<IOTYPE>::f_stat (
 /*-----------------------------------------------------------------------*/
 /* Get Number of Free Clusters                                           */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_getfree (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_getfree (
 	const TCHAR* path,	/* Logical drive number */
 	DWORD* nclst,		/* Pointer to a variable to return number of free clusters */
 	FATFS** fatfs		/* Pointer to return pointer to corresponding filesystem object */
@@ -1308,8 +1308,8 @@ FRESULT Driver<IOTYPE>::f_getfree (
 /*-----------------------------------------------------------------------*/
 /* Truncate File                                                         */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_truncate (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_truncate (
 	FIL* fp		/* Pointer to the file object */
 )
 {
@@ -1358,8 +1358,8 @@ FRESULT Driver<IOTYPE>::f_truncate (
 /*-----------------------------------------------------------------------*/
 /* Delete a File/Directory                                               */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_unlink (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_unlink (
 	const TCHAR* path		/* Pointer to the file or directory path */
 )
 {
@@ -1452,8 +1452,8 @@ FRESULT Driver<IOTYPE>::f_unlink (
 /*-----------------------------------------------------------------------*/
 /* Create a Directory                                                    */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_mkdir (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_mkdir (
 	const TCHAR* path		/* Pointer to the directory path */
 )
 {
@@ -1536,8 +1536,8 @@ FRESULT Driver<IOTYPE>::f_mkdir (
 /*-----------------------------------------------------------------------*/
 /* Rename a File/Directory                                               */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_rename (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_rename (
 	const TCHAR* path_old,	/* Pointer to the object name to be renamed */
 	const TCHAR* path_new	/* Pointer to the new name */
 )
@@ -1646,8 +1646,8 @@ FRESULT Driver<IOTYPE>::f_rename (
 /*-----------------------------------------------------------------------*/
 /* Change Attribute                                                      */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_chmod (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_chmod (
 	const TCHAR* path,	/* Pointer to the file path */
 	BYTE attr,			/* Attribute bits */
 	BYTE mask			/* Attribute mask to change */
@@ -1693,8 +1693,8 @@ FRESULT Driver<IOTYPE>::f_chmod (
 /*-----------------------------------------------------------------------*/
 /* Change Timestamp                                                      */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_utime (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_utime (
 	const TCHAR* path,	/* Pointer to the file/directory name */
 	const FILINFO* fno	/* Pointer to the timestamp to be set */
 )
@@ -1740,8 +1740,8 @@ FRESULT Driver<IOTYPE>::f_utime (
 /*-----------------------------------------------------------------------*/
 /* Get Volume Label                                                      */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_getlabel (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_getlabel (
 	const TCHAR* path,	/* Logical drive number */
 	TCHAR* label,		/* Buffer to store the volume label */
 	DWORD* vsn			/* Variable to store the volume serial number */
@@ -1837,8 +1837,8 @@ FRESULT Driver<IOTYPE>::f_getlabel (
 /*-----------------------------------------------------------------------*/
 /* Set Volume Label                                                      */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_setlabel (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_setlabel (
 	const TCHAR* label	/* Volume label to set with heading logical drive number */
 )
 {
@@ -1957,8 +1957,8 @@ FRESULT Driver<IOTYPE>::f_setlabel (
 /*-----------------------------------------------------------------------*/
 /* Allocate a Contiguous Blocks to the File                              */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_expand (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_expand (
 	FIL* fp,		/* Pointer to the file object */
 	FSIZE_t fsz,	/* File size to be expanded to */
 	BYTE opt		/* Operation mode 0:Find and prepare or 1:Find and allocate */
@@ -2047,8 +2047,8 @@ FRESULT Driver<IOTYPE>::f_expand (
 /*-----------------------------------------------------------------------*/
 /* Forward Data to the Stream Directly                                   */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_forward (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_forward (
 	FIL* fp, 						/* Pointer to the file object */
 	UINT (*func)(const BYTE*,UINT),	/* Pointer to the streaming function */
 	UINT btf,						/* Number of bytes to forward */
@@ -2125,8 +2125,8 @@ FRESULT Driver<IOTYPE>::f_forward (
 
 
 /* Create partitions on the physical drive in format of MBR or GPT */
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::create_partition (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::create_partition (
 	BYTE drv,			/* Physical drive number */
 	const LBA_t plst[],	/* Partition list */
 	BYTE sys,			/* System ID (for only MBR, temp setting) */
@@ -2268,8 +2268,8 @@ FRESULT Driver<IOTYPE>::create_partition (
 }
 
 
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_mkfs (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_mkfs (
 	const TCHAR* path,		/* Logical drive number */
 	const MKFS_PARM* opt,	/* Format options */
 	void* work,				/* Pointer to working buffer (null: use heap memory) */
@@ -2769,8 +2769,8 @@ FRESULT Driver<IOTYPE>::f_mkfs (
 /*-----------------------------------------------------------------------*/
 /* Create Partition Table on the Physical Drive                          */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_fdisk (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_fdisk (
 	BYTE pdrv,			/* Physical drive number */
 	const LBA_t ptbl[],	/* Pointer to the size table for each partitions */
 	void* work			/* Pointer to the working buffer (null: use heap memory) */
@@ -2804,8 +2804,8 @@ FRESULT Driver<IOTYPE>::f_fdisk (
 /*-----------------------------------------------------------------------*/
 /* Get a String from the File                                            */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-TCHAR* Driver<IOTYPE>::f_gets (
+template<typename DISKIO_HW>
+TCHAR* Driver<DISKIO_HW>::f_gets (
 	TCHAR* buff,	/* Pointer to the buffer to store read string */
 	int len,		/* Size of string buffer (items) */
 	FIL* fp			/* Pointer to the file object */
@@ -2954,8 +2954,8 @@ TCHAR* Driver<IOTYPE>::f_gets (
 
 
 /* Buffered file write with code conversion */
-template<typename IOTYPE>
-void Driver<IOTYPE>::putc_bfd (putbuff* pb, TCHAR c)
+template<typename DISKIO_HW>
+void Driver<DISKIO_HW>::putc_bfd (putbuff* pb, TCHAR c)
 {
 	UINT n;
 	int i, nc;
@@ -3085,8 +3085,8 @@ void Driver<IOTYPE>::putc_bfd (putbuff* pb, TCHAR c)
 
 
 /* Flush remaining characters in the buffer */
-template<typename IOTYPE>
-int Driver<IOTYPE>::putc_flush (putbuff* pb)
+template<typename DISKIO_HW>
+int Driver<DISKIO_HW>::putc_flush (putbuff* pb)
 {
 	UINT nw;
 
@@ -3098,16 +3098,16 @@ int Driver<IOTYPE>::putc_flush (putbuff* pb)
 
 
 /* Initialize write buffer */
-template<typename IOTYPE>
-void Driver<IOTYPE>::putc_init (putbuff* pb, FIL* fp)
+template<typename DISKIO_HW>
+void Driver<DISKIO_HW>::putc_init (putbuff* pb, FIL* fp)
 {
 	std::memset(pb, 0, sizeof (putbuff));
 	pb->fp = fp;
 }
 
 
-template<typename IOTYPE>
-int Driver<IOTYPE>::f_putc (
+template<typename DISKIO_HW>
+int Driver<DISKIO_HW>::f_putc (
 	TCHAR c,	/* A character to be output */
 	FIL* fp		/* Pointer to the file object */
 )
@@ -3126,8 +3126,8 @@ int Driver<IOTYPE>::f_putc (
 /*-----------------------------------------------------------------------*/
 /* Put a String to the File                                              */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-int Driver<IOTYPE>::f_puts (
+template<typename DISKIO_HW>
+int Driver<DISKIO_HW>::f_puts (
 	const TCHAR* str,	/* Pointer to the string to be output */
 	FIL* fp				/* Pointer to the file object */
 )
@@ -3148,8 +3148,8 @@ int Driver<IOTYPE>::f_puts (
 /*-----------------------------------------------------------------------*/
 #if FF_PRINT_FLOAT && FF_INTDEF == 2
 
-template<typename IOTYPE>
-int Driver<IOTYPE>::ilog10 (double n)	/* Calculate log10(n) in integer output */
+template<typename DISKIO_HW>
+int Driver<DISKIO_HW>::ilog10 (double n)	/* Calculate log10(n) in integer output */
 {
 	int rv = 0;
 
@@ -3170,8 +3170,8 @@ int Driver<IOTYPE>::ilog10 (double n)	/* Calculate log10(n) in integer output */
 	return rv;
 }
 
-template<typename IOTYPE>
-double Driver<IOTYPE>::i10x (int n)	/* Calculate 10^n in integer input */
+template<typename DISKIO_HW>
+double Driver<DISKIO_HW>::i10x (int n)	/* Calculate 10^n in integer input */
 {
 	double rv = 1;
 
@@ -3193,15 +3193,15 @@ double Driver<IOTYPE>::i10x (int n)	/* Calculate 10^n in integer input */
 }
 
 // https://isocpp.org/wiki/faq/newbie#floating-point-arith
-template<typename IOTYPE>
-bool Driver<IOTYPE>::isEqual(double x, double y)
+template<typename DISKIO_HW>
+bool Driver<DISKIO_HW>::isEqual(double x, double y)
 {
   return std::abs(x - y) <= std::numeric_limits<double>::epsilon() * std::abs(x);
   // see Knuth section 4.2.2 pages 217-218
 }
 
-template<typename IOTYPE>
-void Driver<IOTYPE>::ftoa (
+template<typename DISKIO_HW>
+void Driver<DISKIO_HW>::ftoa (
 	char* buf,	/* Buffer to output the floating point string */
 	double val,	/* Value to output */
 	int prec,	/* Number of fractional digits */
@@ -3275,8 +3275,8 @@ void Driver<IOTYPE>::ftoa (
 #endif	/* FF_PRINT_FLOAT && FF_INTDEF == 2 */
 
 
-template<typename IOTYPE>
-int Driver<IOTYPE>::f_printf (
+template<typename DISKIO_HW>
+int Driver<DISKIO_HW>::f_printf (
 	FIL* fp,			/* Pointer to the file object */
 	const TCHAR* fmt,	/* Pointer to the format string */
 	...					/* Optional arguments... */
@@ -3433,8 +3433,8 @@ int Driver<IOTYPE>::f_printf (
 /*-----------------------------------------------------------------------*/
 /* Set Active Codepage for the Path Name                                 */
 /*-----------------------------------------------------------------------*/
-template<typename IOTYPE>
-FRESULT Driver<IOTYPE>::f_setcp (
+template<typename DISKIO_HW>
+FRESULT Driver<DISKIO_HW>::f_setcp (
 	WORD cp		/* Value to be set as active code page */
 )
 {
