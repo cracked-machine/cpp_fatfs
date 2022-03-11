@@ -7,15 +7,14 @@ The main architecture consists of a public API that uses a lower level disk IO l
 
 Details of the STM32 SPI interface (SPI_TypeDef, GPIO ports and pins) are passed as a `DriverInterfaceSPI` object into the `DiskioMMC` class.  The `DiskioMMC` object is then passed into the main `Driver` API class. A `FileManager` class can be used to manage the `DiskioMMC` and `Driver` objects.
 
-![](doc/cpp_fatfs-InnitSequence.png)
+![](doc/cpp_fatfs-InitSequence.png)
 
 <!-- @startuml
 MainApp -> DriverInterfaceSPI ** : create
 MainApp -> FileManager ** : create(DriverInterfaceSPI)
 FileManager -> DiskioMMC ** : create(DriverInterfaceSPI)
-FileManager -> Driver ** : create
-FileManager-> Driver : init(DiskioMMC)
-Driver -> Driver : unique_ptr<DiskioMMC>
+FileManager -> "Driver<DiskioMMC>" ** : create(DiskioMMC)
+"Driver<DiskioMMC>" -> "Driver<DiskioMMC>" : unique_ptr<DiskioMMC>
 @enduml -->
 
 ### CMake

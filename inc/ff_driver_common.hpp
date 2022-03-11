@@ -41,8 +41,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef __FF_COMMON_HPP__
-#define __FF_COMMON_HPP__
+/// @brief The implementations of the private NON-templated functions from fatfs::DriverCommon
+
+#ifndef __FF_DRIVER_COMMON_HPP__
+#define __FF_DRIVER_COMMON_HPP__
 
 #include <ff_types.hpp>
 
@@ -455,4 +457,4 @@ void create_xdir (
 } // namespace fatfs 
 
 
-#endif // __FF_COMMON_HPP__
+#endif // __FF_DRIVER_COMMON_HPP__

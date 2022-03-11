@@ -41,7 +41,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <ff_common.hpp>
+#include <ff_driver_common.hpp>
 #include <cstring>
 
 namespace fatfs 
