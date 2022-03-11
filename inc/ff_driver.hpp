@@ -61,7 +61,7 @@ class Driver : public DriverCommon
 
 public:
 
-	Driver(DiskioMMC &diskio); 
+	Driver(IOTYPE &diskio); 
 
 	FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode);				/* Open or create a file */
 	FRESULT f_close (FIL* fp);											/* Close an open file object */
@@ -456,7 +456,7 @@ using DriverSPI = Driver<DiskioMMC>;
 /// @tparam IOTYPE Must be a derived type of DiskioBase
 /// @param diskio The low-level Disk IO implementation
 template<typename IOTYPE>
-Driver<IOTYPE>::Driver(DiskioMMC &diskio)
+Driver<IOTYPE>::Driver(IOTYPE &diskio)
 {
 	m_diskio = std::unique_ptr<IOTYPE>(&diskio);
 }
