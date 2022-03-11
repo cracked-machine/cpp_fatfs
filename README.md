@@ -10,11 +10,11 @@ Details of the STM32 SPI interface (SPI_TypeDef, GPIO ports and pins) are passed
 ![](doc/cpp_fatfs-InitSequence.png)
 
 <!-- @startuml
-MainApp -> DriverInterfaceSPI ** : create
-MainApp -> FileManager ** : create(DriverInterfaceSPI)
-FileManager -> DiskioHardwareMMC ** : create(DriverInterfaceSPI)
-FileManager -> "Driver<DiskioHardwareMMC>" ** : create(DiskioHardwareMMC)
-"Driver<DiskioHardwareMMC>" -> "Driver<DiskioHardwareMMC>" : unique_ptr<DiskioHardwareMMC>
+MainApp -> DriverProtocolSPI ** : create
+MainApp -> FileManager ** : create(DriverProtocolSPI)
+FileManager -> "DiskioHardwareMMC<DriverProtocolSPI>" ** : create(DriverProtocolSPI)
+FileManager -> "Driver<DiskioHardwareMMC<DriverProtocolSPI>>" ** : create(DiskioHardwareMMC<DriverProtocolSPI>)
+"Driver<DiskioHardwareMMC<DriverProtocolSPI>>" -> "Driver<DiskioHardwareMMC<DriverProtocolSPI>>" : unique_ptr<DiskioHardwareMMC<DriverProtocolSPI>>
 @enduml -->
 
 ### CMake
