@@ -50,6 +50,7 @@
 
 
 
+
 namespace fatfs {
 
 /// @brief Template class for all low-level MMC Disk IO implementations
@@ -91,9 +92,6 @@ public:
     /// @brief Construct a new Diskio Hardware M M C object
     /// @param periph_interface 
     DiskioHardwareMMC(DISKIO_PROTOCOL &periph_interface);
-
-    /// @brief Initialize the peripheral. This should only be implemented when explicitly specialized
-    void periph_init();
 
     /// @brief 
     /// @param pdrv 

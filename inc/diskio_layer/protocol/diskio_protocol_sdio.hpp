@@ -70,6 +70,9 @@ public:
 	{
 	}
 
+	bool setup_sdio()
+	{}
+
 	SDIO_TypeDef * get_sdio_handle() { return m_sdio; }
 
 	GPIO_TypeDef* get_cmd_port() { return m_cmd_port; }
