@@ -81,33 +81,32 @@ public:
 
         LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOA | LL_IOP_GRP1_PERIPH_GPIOB | LL_IOP_GRP1_PERIPH_GPIOD);
         
-
-        // Enable GPIO (CS)
-        LL_GPIO_SetPinSpeed(m_cs_gpio.first, m_cs_gpio.second, LL_GPIO_SPEED_FREQ_VERY_HIGH); // medium output speed
-        LL_GPIO_SetPinOutputType(m_cs_gpio.first, m_cs_gpio.second, LL_GPIO_OUTPUT_PUSHPULL);
-        LL_GPIO_SetPinPull(m_cs_gpio.first, m_cs_gpio.second, LL_GPIO_PULL_DOWN);
-        LL_GPIO_SetPinMode(m_cs_gpio.first, m_cs_gpio.second, LL_GPIO_MODE_OUTPUT);    // GPIO output
+        // Enable GPIO (SPI_SCK)
+        LL_GPIO_SetPinSpeed(m_sck_gpio.first, m_sck_gpio.second, LL_GPIO_SPEED_FREQ_VERY_HIGH);
+        LL_GPIO_SetPinOutputType(m_sck_gpio.first, m_sck_gpio.second, LL_GPIO_OUTPUT_PUSHPULL);
+        LL_GPIO_SetPinPull(m_sck_gpio.first, m_sck_gpio.second, LL_GPIO_PULL_UP);
+        LL_GPIO_SetAFPin_8_15(m_sck_gpio.first, m_sck_gpio.second, LL_GPIO_AF_1);
+        LL_GPIO_SetPinMode(m_sck_gpio.first, m_sck_gpio.second, LL_GPIO_MODE_ALTERNATE);  
 
         // Enable GPIO (SPI_MOSI)
         LL_GPIO_SetPinSpeed(m_mosi_gpio.first, m_mosi_gpio.second, GPIO_OSPEEDR_OSPEED0); // medium output speed
         LL_GPIO_SetPinOutputType(m_mosi_gpio.first, m_mosi_gpio.second, LL_GPIO_OUTPUT_PUSHPULL);
-        LL_GPIO_SetPinPull(m_mosi_gpio.first, m_mosi_gpio.second, LL_GPIO_PULL_DOWN);
+        LL_GPIO_SetPinPull(m_mosi_gpio.first, m_mosi_gpio.second, LL_GPIO_PULL_UP);
         LL_GPIO_SetAFPin_0_7(m_mosi_gpio.first, m_mosi_gpio.second, LL_GPIO_AF_1);
         LL_GPIO_SetPinMode(m_mosi_gpio.first, m_mosi_gpio.second, LL_GPIO_MODE_ALTERNATE);
 
         // Enable GPIO (SPI_MISO)
         LL_GPIO_SetPinSpeed(m_miso_gpio.first, m_miso_gpio.second, GPIO_OSPEEDR_OSPEED0); // medium output speed
         LL_GPIO_SetPinOutputType(m_miso_gpio.first, m_miso_gpio.second, LL_GPIO_OUTPUT_PUSHPULL);
-        LL_GPIO_SetPinPull(m_miso_gpio.first, m_miso_gpio.second, LL_GPIO_PULL_DOWN);
+        LL_GPIO_SetPinPull(m_miso_gpio.first, m_miso_gpio.second, LL_GPIO_PULL_UP);
         LL_GPIO_SetAFPin_0_7(m_miso_gpio.first, m_miso_gpio.second, LL_GPIO_AF_1);
         LL_GPIO_SetPinMode(m_miso_gpio.first, m_miso_gpio.second, LL_GPIO_MODE_ALTERNATE);
 
-        // Enable GPIO (SPI_SCK)
-        LL_GPIO_SetPinSpeed(m_sck_gpio.first, m_sck_gpio.second, LL_GPIO_SPEED_FREQ_VERY_HIGH);
-        LL_GPIO_SetPinOutputType(m_sck_gpio.first, m_sck_gpio.second, LL_GPIO_OUTPUT_PUSHPULL);
-        LL_GPIO_SetPinPull(m_sck_gpio.first, m_sck_gpio.second, LL_GPIO_PULL_DOWN);
-        LL_GPIO_SetAFPin_8_15(m_sck_gpio.first, m_sck_gpio.second, LL_GPIO_AF_1);
-        LL_GPIO_SetPinMode(m_sck_gpio.first, m_sck_gpio.second, LL_GPIO_MODE_ALTERNATE);        
+        // Enable GPIO (CS)
+        LL_GPIO_SetPinSpeed(m_cs_gpio.first, m_cs_gpio.second, LL_GPIO_SPEED_FREQ_VERY_HIGH); // medium output speed
+        LL_GPIO_SetPinOutputType(m_cs_gpio.first, m_cs_gpio.second, LL_GPIO_OUTPUT_PUSHPULL);
+        LL_GPIO_SetPinPull(m_cs_gpio.first, m_cs_gpio.second, LL_GPIO_PULL_UP);
+        LL_GPIO_SetPinMode(m_cs_gpio.first, m_cs_gpio.second, LL_GPIO_MODE_OUTPUT);    
 
     		
 		#pragma GCC diagnostic pop  // ignored "-Wvolatile"  
@@ -137,15 +136,15 @@ public:
         return true;
 	}
 
-	SPI_TypeDef * get_spi_handle() { return m_spi; }
-	std::pair<GPIO_TypeDef*, uint32_t> get_cs_gpio() { return m_cs_gpio; }
-	std::pair<GPIO_TypeDef*, uint32_t> get_mosi_gpio() { return m_mosi_gpio; }
-	std::pair<GPIO_TypeDef*, uint32_t> get_miso_gpio() { return m_miso_gpio; }
-	std::pair<GPIO_TypeDef*, uint32_t> get_sck_gpio() { return m_sck_gpio; }
-    uint32_t get_rcc_spi_clk() { return m_rcc_spi_clk; }
+	SPI_TypeDef * spi_handle() { return m_spi; }
+	std::pair<GPIO_TypeDef*, uint32_t> cs_gpio() { return m_cs_gpio; }
+	std::pair<GPIO_TypeDef*, uint32_t> mosi_gpio() { return m_mosi_gpio; }
+	std::pair<GPIO_TypeDef*, uint32_t> miso_gpio() { return m_miso_gpio; }
+	std::pair<GPIO_TypeDef*, uint32_t> sck_gpio() { return m_sck_gpio; }
+    uint32_t rcc_spi_clk() { return m_rcc_spi_clk; }
 
-    void set_cs_low() { m_cs_gpio.first->BSRR = m_cs_gpio.second; }
-    void set_cs_high() { m_cs_gpio.first->BRR = m_cs_gpio.second; }
+    void set_cs_low() { m_cs_gpio.first->BRR = m_cs_gpio.second; }
+    void set_cs_high() { m_cs_gpio.first->BSRR = m_cs_gpio.second; }
     void toggle_cs() 
     {   
         // read the ODR state of this GPIO port

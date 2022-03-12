@@ -21,9 +21,13 @@
 // SOFTWARE.
 
 #include <diskio_hardware_mmc.hpp>
+
+#include <timer_manager.hpp>
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wvolatile" 
 #include <stm32g0xx_ll_gpio.h>
+#include <stm32g0xx_ll_utils.h>
 #pragma GCC diagnostic pop  // ignored "-Wvolatile"
 
 namespace fatfs {
@@ -52,22 +56,34 @@ DiskioHardwareBase::DSTATUS DiskioHardwareMMC<DiskioProtocolSPI>::initialize(BYT
     // Is card inserted?
 	if (Stat & STA_NODISK) return Stat;	
 
-    // send some bytes to trigger 74+ clock pulses from SCLK between 100-400KHz
-	// stm32::spi::set_prescaler(m_protocol.get_spi_handle(), (SPI_CR1_BR_2 | SPI_CR1_BR_1));
-    // set CS high
+    // 1. Power On
+    // send some bytes to trigger 74+ clock pulses from SCLK at [MCLK 64MHz / SPI-PSC 256 = SPI-CLK 250KHz]
+	stm32::spi::set_prescaler(m_protocol.spi_handle(), (SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0));
+    
     m_protocol.set_cs_high();
-    for (uint8_t n = 10; n; n--) 
+    for (uint8_t n = 20; n; n--) 
     {
-        // send a byte
-        stm32::spi::transmit_byte(m_protocol.get_spi_handle(), 0xF0);
-        // check the data has left the SPI FIFO before sending the next
-        while (!stm32::spi::wait_for_txe_flag(m_protocol.get_spi_handle(), 10));
-        while (!stm32::spi::wait_for_bsy_flag(m_protocol.get_spi_handle(), 10));
-        
+        // send a byte, value is not important
+        stm32::spi::send_byte(m_protocol.spi_handle(), 0xFF);        
     }
-    // set CS low
-    m_protocol.set_cs_low();
 
+    // 2. Software Reset the MMC into SPI Mode
+    m_protocol.set_cs_low();
+    stm32::spi::send_byte(m_protocol.spi_handle(), (0x40 | CMD0));
+    stm32::spi::send_byte(m_protocol.spi_handle(), (0x00));
+    stm32::spi::send_byte(m_protocol.spi_handle(), (0x00));
+    stm32::spi::send_byte(m_protocol.spi_handle(), (0x00));
+    stm32::spi::send_byte(m_protocol.spi_handle(), (0x00));
+    stm32::spi::send_byte(m_protocol.spi_handle(), (0x95)); // CRC for CMD0
+    LL_mDelay(1);
+
+    [[maybe_unused]] volatile uint8_t rxbyte {0};
+    while (rxbyte != R1)
+    {
+        stm32::spi::send_byte(m_protocol.spi_handle(), 0xFF);
+        rxbyte = m_protocol.spi_handle()->DR;
+        LL_mDelay(1);
+    }
     return res;
 }
 

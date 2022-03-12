@@ -89,6 +89,8 @@ public:
     const BYTE CT_SDC	= CT_SD1|CT_SD2;// SD
     const BYTE CT_BLOCK	= 0x08;		    // Block addressing
 
+    const BYTE R1       = 0x01;
+
     /// @brief Construct a new Diskio Hardware M M C object
     /// @param periph_interface 
     DiskioHardwareMMC(DISKIO_PROTOCOL &periph_interface);
