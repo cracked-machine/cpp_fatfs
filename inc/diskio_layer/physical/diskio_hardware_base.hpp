@@ -66,6 +66,8 @@ public:
         RES_PARERR		/* 4: Invalid Parameter */
     };
 
+    DSTATUS Stat = STA_NOINIT;
+
     static const BYTE STA_NOINIT        = 0x01;	/* Drive not initialized */
     static const BYTE STA_NODISK	    = 0x02;	/* No medium in the drive */
     static const BYTE STA_PROTECT       = 0x04;	/* Write protected */
@@ -93,11 +95,38 @@ public:
     static const BYTE ATA_GET_MODEL		= 21;	/* Get model name */
     static const BYTE ATA_GET_SN		= 22;	/* Get serial number */
     
-    virtual DSTATUS initialize(BYTE pdrv);
-    virtual DSTATUS status(BYTE pdrv);
-    virtual DRESULT read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count);
-    virtual DRESULT write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count);
-    virtual DRESULT ioctl (BYTE pdrv, BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]]);
+    /// @brief Initialise the media device
+    /// @param pdrv 
+    /// @return DSTATUS 
+    virtual DSTATUS initialize(BYTE pdrv) = 0;
+
+    /// @brief Get the status of the media device
+    /// @param pdrv 
+    /// @return DSTATUS 
+    virtual DSTATUS status(BYTE pdrv) = 0;
+
+    /// @brief Read from the media device
+    /// @param pdrv 
+    /// @param buff 
+    /// @param sector 
+    /// @param count 
+    /// @return DRESULT 
+    virtual DRESULT read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count) = 0;
+
+    /// @brief Write to the media device
+    /// @param pdrv 
+    /// @param buff 
+    /// @param sector 
+    /// @param count 
+    /// @return DRESULT 
+    virtual DRESULT write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count) = 0;
+
+    /// @brief 
+    /// @param pdrv 
+    /// @param cmd 
+    /// @param buff 
+    /// @return DRESULT 
+    virtual DRESULT ioctl (BYTE pdrv, BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]]) = 0;
 };
 
 } // namespace fatfs

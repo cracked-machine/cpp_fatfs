@@ -41,20 +41,13 @@
 // SOFTWARE.
 
 
-/// @brief The implementations of the private templated functions from fatfs::Driver
+/// @brief The implementations of the public templated functions from fatfs::Driver (ff_driver.cpp)
 
 #ifndef __FF_DRIVER_PUBLIC_IMPL_HPP__
 #define __FF_DRIVER_PUBLIC_IMPL_HPP__
 
 namespace fatfs
 {
-
-
-/*---------------------------------------------------------------------------
-
-   Public Functions (FatFs API)
-
-----------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------*/
 /* Mount/Unmount a Logical Drive                                         */

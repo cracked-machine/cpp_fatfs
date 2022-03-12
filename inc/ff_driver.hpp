@@ -450,7 +450,7 @@ private:
 };
 
 /// @brief Template specialization for MMC types using SPI
-using DriverSPI = Driver<DiskIO_MMC_SPI>;
+using DriverSPI = Driver<fatfs::DiskioHardwareMMC<fatfs::DiskioProtocolSPI>>;
 
 /// @brief Constructor for Driver
 /// @tparam DISKIO_HW Must be a derived type of DiskioHardwareBase

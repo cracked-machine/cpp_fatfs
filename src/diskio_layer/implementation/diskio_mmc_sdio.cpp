@@ -41,40 +41,93 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <diskio_hardware_base.hpp>
-
+#include <diskio_hardware_mmc.hpp>
 
 
 namespace fatfs {
 
-DiskioHardwareBase::DSTATUS DiskioHardwareBase::initialize(BYTE pdrv [[maybe_unused]]) 
+#if defined(ENABLE_MMC_SDIO)
+
+static const BYTE ISDIO_READ		= 55;	/* Read data form SD iSDIO register */
+static const BYTE ISDIO_WRITE		= 56;	/* Write data to SD iSDIO register */
+static const BYTE ISDIO_MRITE		= 57;	/* Masked write data to SD iSDIO register */
+
+template<>
+void DiskioHardwareMMC<DiskioProtocolSDIO>::periph_init()
 {
+    #if not defined(X86_UNIT_TESTING_ONLY)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wvolatile" 
+        // Enable GPIO (SDIO CMD)
+
+        // Enable GPIO (SDIO CLK)
+        
+        // Enable GPIO (SDIO D0)
+        
+        // Enable GPIO (SDIO D1)
+        
+        // Enable GPIO (SDIO D2)
+        
+        // Enable GPIO (SDIO D3)               
+
+    #pragma GCC diagnostic pop  // ignored "-Wvolatile"  
+    #endif // not X86_UNIT_TESTING_ONLY
+
+}    
+
+template<>
+DiskioHardwareBase::DSTATUS DiskioHardwareMMC<DiskioProtocolSDIO>::initialize(BYTE pdrv [[maybe_unused]]) 
+{
+    // get STM32 SDIO peripheral ready
+    periph_init();
     DSTATUS res = 0;
     return res;
 }
 
-DiskioHardwareBase::DSTATUS DiskioHardwareBase::status(BYTE pdrv [[maybe_unused]]) 
+template<>
+DiskioHardwareBase::DSTATUS DiskioHardwareMMC<DiskioProtocolSDIO>::status(BYTE pdrv [[maybe_unused]]) 
 {
+    // get STM32 SDIO peripheral ready
+    periph_init();
     DSTATUS res = 0;
     return res;
 }
 
-DiskioHardwareBase::DRESULT DiskioHardwareBase::read(BYTE pdrv [[maybe_unused]], BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
+template<>
+DiskioHardwareBase::DRESULT DiskioHardwareMMC<DiskioProtocolSDIO>::read(
+    BYTE pdrv [[maybe_unused]], 
+    BYTE* buff [[maybe_unused]], 
+    LBA_t sector [[maybe_unused]], 
+    UINT count [[maybe_unused]]) 
 {
+    // get STM32 SDIO peripheral ready
+    periph_init();    
     return DRESULT::RES_OK;
 }
 
-DiskioHardwareBase::DRESULT DiskioHardwareBase::write(BYTE pdrv [[maybe_unused]], const BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
+template<>
+DiskioHardwareBase::DRESULT DiskioHardwareMMC<DiskioProtocolSDIO>::write(
+    BYTE pdrv [[maybe_unused]], 
+    const BYTE* buff [[maybe_unused]], 
+    LBA_t sector [[maybe_unused]], 
+    UINT count [[maybe_unused]]) 
 {
+    // get STM32 SDIO peripheral ready
+    periph_init();    
     return DRESULT::RES_OK;
 }
 
-DiskioHardwareBase::DRESULT DiskioHardwareBase::ioctl (BYTE pdrv [[maybe_unused]], BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]])
+template<>
+DiskioHardwareBase::DRESULT DiskioHardwareMMC<DiskioProtocolSDIO>::ioctl (
+    BYTE pdrv [[maybe_unused]], 
+    BYTE cmd [[maybe_unused]], 
+    void *buff [[maybe_unused]])
 {
+    // get STM32 SDIO peripheral ready
+    periph_init();    
     return DRESULT::RES_OK;
 }
 
+#endif // #if defined(ENABLE_MMC_SDIO)
 
-} // namespace fatfs
-
-
+} // namespace fatfs 

@@ -47,33 +47,44 @@
 namespace fatfs {
 
 template<>
-DiskIO_USB::DSTATUS DiskIO_USB::initialize(BYTE pdrv [[maybe_unused]]) 
+DiskioHardwareBase::DSTATUS DiskioHardwareUSB<DiskioProtocolUSB>::initialize(BYTE pdrv [[maybe_unused]]) 
 {
     DSTATUS res = 0;
     return res;
 }
 
 template<>
-DiskIO_USB::DSTATUS DiskIO_USB::status(BYTE pdrv [[maybe_unused]]) 
+DiskioHardwareBase::DSTATUS DiskioHardwareUSB<DiskioProtocolUSB>::status(BYTE pdrv [[maybe_unused]]) 
 {
     DSTATUS res = 0;
     return res;
 }
 
 template<>
-DiskIO_USB::DRESULT DiskIO_USB::read(BYTE pdrv [[maybe_unused]], BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
+DiskioHardwareBase::DRESULT DiskioHardwareUSB<DiskioProtocolUSB>::read(
+    BYTE pdrv [[maybe_unused]], 
+    BYTE* buff [[maybe_unused]], 
+    LBA_t sector [[maybe_unused]], 
+    UINT count [[maybe_unused]]) 
 {
     return DRESULT::RES_OK;
 }
 
 template<>
-DiskIO_USB::DRESULT DiskIO_USB::write(BYTE pdrv [[maybe_unused]], const BYTE* buff [[maybe_unused]], LBA_t sector [[maybe_unused]], UINT count [[maybe_unused]]) 
+DiskioHardwareBase::DRESULT DiskioHardwareUSB<DiskioProtocolUSB>::write(
+    BYTE pdrv [[maybe_unused]], 
+    const BYTE* buff [[maybe_unused]], 
+    LBA_t sector [[maybe_unused]], 
+    UINT count [[maybe_unused]]) 
 {
     return DRESULT::RES_OK;
 }
 
 template<>
-DiskIO_USB::DRESULT DiskIO_USB::ioctl (BYTE pdrv [[maybe_unused]], BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]])
+DiskioHardwareBase::DRESULT DiskioHardwareUSB<DiskioProtocolUSB>::ioctl (
+    BYTE pdrv [[maybe_unused]], 
+    BYTE cmd [[maybe_unused]], 
+    void *buff [[maybe_unused]])
 {
     return DRESULT::RES_OK;
 }

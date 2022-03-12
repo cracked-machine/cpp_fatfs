@@ -41,39 +41,78 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef __DISKIO_HARDWARE_MMC_HPP__
-#define __DISKIO_HARDWARE_MMC_HPP__
+#ifndef __DISKIO_HARDWARE_USB_HPP__
+#define __DISKIO_HARDWARE_USB_HPP__
 
 #include <diskio_hardware_base.hpp>
-#include <diskio_protocol_spi.hpp>
-#include <diskio_protocol_sdio.hpp>
+#include <diskio_protocol_usb.hpp>
 
 namespace fatfs {
 
 template<typename DISKIO_PROTOCOL>
-class DiskioHardwareMMC : public DiskioHardwareBase
+class DiskioHardwareUSB : public DiskioHardwareBase
 {
 public:
-    DiskioHardwareMMC(DISKIO_PROTOCOL &periph_interface);
+    /// @brief Construct a new Diskio Hardware U S B object
+    /// @param protocol 
+    DiskioHardwareUSB(DISKIO_PROTOCOL &protocol);
+
+    /// @brief 
     void periph_init();
-    DSTATUS initialize(BYTE pdrv) override;
-    DSTATUS status(BYTE pdrv) override;
-    DRESULT read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count) override;
-    DRESULT write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count) override;
-    DRESULT ioctl (BYTE pdrv, BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]]) override;
+
+    /// @brief 
+    /// @param pdrv 
+    /// @return DSTATUS 
+    virtual DSTATUS initialize(BYTE pdrv) override;
+
+    /// @brief 
+    /// @param pdrv 
+    /// @return DSTATUS 
+    virtual DSTATUS status(BYTE pdrv) override;
+
+    /// @brief 
+    /// @param pdrv 
+    /// @param buff 
+    /// @param sector 
+    /// @param count 
+    /// @return DRESULT 
+    virtual DRESULT read(BYTE pdrv, BYTE* buff, LBA_t sector, UINT count) override;
+
+    /// @brief 
+    /// @param pdrv 
+    /// @param buff 
+    /// @param sector 
+    /// @param count 
+    /// @return DRESULT 
+    virtual DRESULT write(BYTE pdrv, const BYTE* buff, LBA_t sector, UINT count) override;
+
+    /// @brief 
+    /// @param pdrv 
+    /// @param cmd 
+    /// @param buff 
+    /// @return DRESULT 
+    virtual DRESULT ioctl (BYTE pdrv, BYTE cmd [[maybe_unused]], void *buff [[maybe_unused]]) override;
 
 private:
-    DISKIO_PROTOCOL m_periph_interface;
+    DISKIO_PROTOCOL m_protocol;
 };
 
-#if defined(ENABLE_MMC_SPI)
-using DiskIO_MMC_SPI = fatfs::DiskioHardwareMMC<fatfs::DiskioProtocolSPI>;
-#endif 
+/// @brief Template c'tor for initialising the DiskioHardwareUSB "DISKIO_PROTOCOL m_periph" member. 
+/// Note, if you explicitly specialize the *entire* DiskioHardwareUSB class, this c'tor won't be called.
+/// Instead you should explicitly specialize the DiskioHardwareUSB *member functions only*. 
+/// Protocol specific functions should go in diskio_protocol_usb.hpp class
+/// @tparam DISKIO_PROTOCOL The type to initialize
+/// @param protocol Reference to the object we intialize "DISKIO_PROTOCOL m_periph" with
+template<typename DISKIO_PROTOCOL>
+DiskioHardwareUSB<DISKIO_PROTOCOL>::DiskioHardwareUSB(DISKIO_PROTOCOL &protocol)
+:
+    m_protocol(protocol)
+{
 
-#if defined(ENABLE_MMC_SDIO)
-using DiskIO_MMC_SDIO = fatfs::DiskioHardwareMMC<fatfs::DiskioProtocolSDIO>;
-#endif
+}
+
+// using DiskIO_USB = fatfs::DiskioHardwareUSB<fatfs::DiskioProtocolUSB>;
 
 } // namespace fatfs 
 
-#endif // __DISKIO_HARDWARE_MMC_HPP__
+#endif // __DISKIO_HARDWARE_USB_HPP__
