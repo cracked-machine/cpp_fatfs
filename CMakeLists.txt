@@ -10,7 +10,6 @@ target_sources(${BUILD_NAME} PRIVATE
 
 target_include_directories(${BUILD_NAME} PRIVATE 
     inc
-    inc/diskio_layer
     inc/diskio_layer/physical
     inc/diskio_layer/protocol
 )
