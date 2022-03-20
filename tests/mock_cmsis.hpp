@@ -1,3 +1,22 @@
+/**
+  ******************************************************************************
+  * @file    mock.cmsis.hpp
+  * @author  MCD Application Team
+  * @brief   Mock CMSIS Cortex-M0+ Device System Source File for STM32G0xx devices.
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics. 
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under Apache License, Version 2.0,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/Apache-2.0
+  *
+  ******************************************************************************
+  */
+
 #ifndef __MOCK_CMSIS_HPP__
 #define __MOCK_CMSIS_HPP__
 
