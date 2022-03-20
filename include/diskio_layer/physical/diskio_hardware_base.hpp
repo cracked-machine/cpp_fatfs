@@ -45,6 +45,8 @@
 
 #include <ff_types.hpp>	
 
+#include <spi_utils.hpp>
+
 #define ENABLE_MMC_SPI
 namespace fatfs {
 

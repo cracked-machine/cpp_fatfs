@@ -1,0 +1,37 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "run binary",
+            "type": "process",
+            "command": "${workspaceRoot}/build/test_suite"
+        },
+        {
+            "label": "create report",
+            "type": "shell",
+            "command": "rm coverage/*; gcovr  -r . -e build -e 'tests/(.+)' --html --html-details -o coverage/index.html"
+        },
+        {
+            "label": "convert html to pdf",
+            "type": "shell",
+            "command": "wkhtmltopdf ${workspaceRoot}/coverage/index.html ${workspaceRoot}/coverage/*.html ${workspaceRoot}/coverage/code.pdf"
+        },
+        {
+            "label": "delete html",
+            "type": "shell",
+            "command": "rm ${workspaceRoot}/coverage/*.html"
+        },
+        {
+            "label": "open report",
+            "type": "shell",
+            "command": "firefox ${workspaceRoot}/coverage/code.pdf"
+        },
+        {
+            "label": "coverage report",
+            "dependsOrder": "sequence",
+            "dependsOn": ["run binary", "create report", "convert html to pdf", "delete html", "open report"]
+        }
+    ]
+}

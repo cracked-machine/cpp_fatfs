@@ -55,7 +55,7 @@ class DiskioHardwareUSB : public DiskioHardwareBase
 public:
     /// @brief Construct a new Diskio Hardware U S B object
     /// @param protocol 
-    DiskioHardwareUSB(DISKIO_PROTOCOL &protocol);
+    explicit DiskioHardwareUSB(const DISKIO_PROTOCOL &protocol);
 
     /// @brief 
     void periph_init();
@@ -104,7 +104,7 @@ private:
 /// @tparam DISKIO_PROTOCOL The type to initialize
 /// @param protocol Reference to the object we intialize "DISKIO_PROTOCOL m_periph" with
 template<typename DISKIO_PROTOCOL>
-DiskioHardwareUSB<DISKIO_PROTOCOL>::DiskioHardwareUSB(DISKIO_PROTOCOL &protocol)
+DiskioHardwareUSB<DISKIO_PROTOCOL>::DiskioHardwareUSB(const DISKIO_PROTOCOL &protocol)
 :
     m_protocol(protocol)
 {

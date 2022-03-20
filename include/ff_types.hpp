@@ -51,7 +51,7 @@
 #include <cctype>
 #include <cmath>			
 #include <cstring>
-#include <memory>
+// #include <memory>
 #include <type_traits>
 
 // #if FF_DEFINED != FFCONF_DEF

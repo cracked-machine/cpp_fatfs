@@ -89,11 +89,12 @@ public:
     const BYTE CT_SDC	= CT_SD1|CT_SD2;// SD
     const BYTE CT_BLOCK	= 0x08;		    // Block addressing
 
+    const BYTE R0       = 0x00;         
     const BYTE R1       = 0x01;
 
     /// @brief Construct a new Diskio Hardware M M C object
     /// @param periph_interface 
-    DiskioHardwareMMC(DISKIO_PROTOCOL &periph_interface);
+    explicit DiskioHardwareMMC(const DISKIO_PROTOCOL &periph_interface);
 
     /// @brief 
     /// @param pdrv 
@@ -139,7 +140,7 @@ private:
 /// @tparam DISKIO_PROTOCOL The type to initialize
 /// @param protocol_interface Reference to the object we intialize "DISKIO_PROTOCOL m_periph_interface" with
 template<typename DISKIO_PROTOCOL>
-DiskioHardwareMMC<DISKIO_PROTOCOL>::DiskioHardwareMMC(DISKIO_PROTOCOL &protocol)
+DiskioHardwareMMC<DISKIO_PROTOCOL>::DiskioHardwareMMC(const DISKIO_PROTOCOL &protocol)
 :
     m_protocol(protocol)
 {

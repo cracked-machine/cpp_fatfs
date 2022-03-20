@@ -24,11 +24,18 @@
 
 #include <timer_manager.hpp>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wvolatile" 
-#include <stm32g0xx_ll_gpio.h>
-#include <stm32g0xx_ll_utils.h>
-#pragma GCC diagnostic pop  // ignored "-Wvolatile"
+#ifdef X86_UNIT_TESTING_ONLY
+#else
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wvolatile" 
+    #include <stm32g0xx_ll_gpio.h>
+    #pragma GCC diagnostic pop  // ignored "-Wvolatile"
+#endif
+#if defined(USE_RTT)
+#include <SEGGER_RTT.h>
+#endif
+
+
 
 namespace fatfs {
 
@@ -57,7 +64,7 @@ DiskioHardwareBase::DSTATUS DiskioHardwareMMC<DiskioProtocolSPI>::initialize(BYT
 	if (Stat & STA_NODISK) return Stat;	
 
     // 1. Power On
-    // send some bytes to trigger 74+ clock pulses from SCLK at [MCLK 64MHz / SPI-PSC 256 = SPI-CLK 250KHz]
+    // send some bytes at slow speed to trigger 74+ clock pulses via SCLK [MCLK 64MHz / SPI-PSC 256 = SPI-CLK 250KHz]
 	stm32::spi::set_prescaler(m_protocol.spi_handle(), (SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0));
     
     m_protocol.set_cs_high();
@@ -75,15 +82,39 @@ DiskioHardwareBase::DSTATUS DiskioHardwareMMC<DiskioProtocolSPI>::initialize(BYT
     stm32::spi::send_byte(m_protocol.spi_handle(), (0x00));
     stm32::spi::send_byte(m_protocol.spi_handle(), (0x00));
     stm32::spi::send_byte(m_protocol.spi_handle(), (0x95)); // CRC for CMD0
-    LL_mDelay(1);
+    stm32::delay_millisecond(1);
 
     [[maybe_unused]] volatile uint8_t rxbyte {0};
     while (rxbyte != R1)
     {
         stm32::spi::send_byte(m_protocol.spi_handle(), 0xFF);
         rxbyte = m_protocol.spi_handle()->DR;
-        LL_mDelay(1);
+        stm32::delay_millisecond(1);
     }
+
+    // 2. Initialization
+    // send some bytes at fast speed [MCLK 64MHz / SPI-PSC 8 = SPI-CLK 8MHz]
+	// stm32::spi::set_prescaler(m_protocol.spi_handle(), SPI_CR1_BR_1);
+    stm32::spi::send_byte(m_protocol.spi_handle(), ACMD41);
+    stm32::spi::send_byte(m_protocol.spi_handle(), (0x40));
+    stm32::spi::send_byte(m_protocol.spi_handle(), (0x00));    
+    stm32::spi::send_byte(m_protocol.spi_handle(), (0x00));
+    stm32::spi::send_byte(m_protocol.spi_handle(), (0x00));
+    stm32::spi::send_byte(m_protocol.spi_handle(), (0x77));  // crc for CMD8
+
+    stm32::delay_millisecond(1);
+    // while (rxbyte != R0)
+    {
+        stm32::spi::send_byte(m_protocol.spi_handle(), 0xFF);
+        // cppcheck-suppress unreadVariable
+        rxbyte = m_protocol.spi_handle()->DR;
+        #if defined(USE_RTT)
+        if (rxbyte != 0xFF)
+            SEGGER_RTT_printf(0, "\nrx: %u", +rxbyte);
+        #endif
+        stm32::delay_millisecond(1);
+    }
+
     return res;
 }
 

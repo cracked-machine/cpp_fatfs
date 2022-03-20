@@ -132,7 +132,8 @@ private:
 	/// @brief The low-layer Disk IO implementation object. 
 	/// Assign using c'tor with a derived type that matches this template class specialization.
 	/// e.g. DiskioHardwareMMC should be used with Driver<DiskioHardwareMMC>
-	std::unique_ptr<DiskioHardwareBase> m_diskio;
+	// std::unique_ptr<DiskioHardwareBase> m_diskio;
+	DiskioHardwareBase* m_diskio;
 
 	#if !FF_FS_READONLY
 		/// @brief Flush disk access window in the filesystem object  
@@ -458,7 +459,8 @@ using DriverSPI = Driver<fatfs::DiskioHardwareMMC<fatfs::DiskioProtocolSPI>>;
 template<typename DISKIO_HW>
 Driver<DISKIO_HW>::Driver(DISKIO_HW &diskio)
 {
-	m_diskio = std::unique_ptr<DISKIO_HW>(&diskio);
+	// m_diskio = std::unique_ptr<DISKIO_HW>(&diskio);
+	m_diskio = &diskio;
 }
 
 /*--------------------------------*/

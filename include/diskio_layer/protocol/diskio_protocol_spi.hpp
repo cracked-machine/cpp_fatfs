@@ -26,9 +26,9 @@
 
 
 #if defined(X86_UNIT_TESTING_ONLY)
-	// only used when unit testing on x86
-    #include <mock_cmsis.hpp>
 	#include <iostream>
+    // This file should contain bit definitions
+    #include <mock_cmsis.hpp>
 #else
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wvolatile"
@@ -36,10 +36,11 @@
         #include <stm32g0xx_ll_spi.h>
         #include <stm32g0xx_ll_bus.h>
 	#pragma GCC diagnostic pop
-	#include <spi_utils.hpp>
+	
 
 #endif
 
+#include <spi_utils.hpp>
 #include <stdint.h>
 #include <utility>
 
@@ -73,11 +74,13 @@ public:
 	{}
 	bool setup_spi()
 	{
-		#if not defined(X86_UNIT_TESTING_ONLY)
-		#pragma GCC diagnostic push
-		#pragma GCC diagnostic ignored "-Wvolatile" 
+
 
         stm32::spi::enable_spi(m_spi, false);
+#ifndef X86_UNIT_TESTING_ONLY
+
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Wvolatile" 
 
         LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOA | LL_IOP_GRP1_PERIPH_GPIOB | LL_IOP_GRP1_PERIPH_GPIOD);
         
@@ -98,7 +101,7 @@ public:
         // Enable GPIO (SPI_MISO)
         LL_GPIO_SetPinSpeed(m_miso_gpio.first, m_miso_gpio.second, GPIO_OSPEEDR_OSPEED0); // medium output speed
         LL_GPIO_SetPinOutputType(m_miso_gpio.first, m_miso_gpio.second, LL_GPIO_OUTPUT_PUSHPULL);
-        LL_GPIO_SetPinPull(m_miso_gpio.first, m_miso_gpio.second, LL_GPIO_PULL_UP);
+        LL_GPIO_SetPinPull(m_miso_gpio.first, m_miso_gpio.second, LL_GPIO_PULL_UP); // must be PUP for init
         LL_GPIO_SetAFPin_0_7(m_miso_gpio.first, m_miso_gpio.second, LL_GPIO_AF_1);
         LL_GPIO_SetPinMode(m_miso_gpio.first, m_miso_gpio.second, LL_GPIO_MODE_ALTERNATE);
 
@@ -107,10 +110,10 @@ public:
         LL_GPIO_SetPinOutputType(m_cs_gpio.first, m_cs_gpio.second, LL_GPIO_OUTPUT_PUSHPULL);
         LL_GPIO_SetPinPull(m_cs_gpio.first, m_cs_gpio.second, LL_GPIO_PULL_UP);
         LL_GPIO_SetPinMode(m_cs_gpio.first, m_cs_gpio.second, LL_GPIO_MODE_OUTPUT);    
-
+        #pragma GCC diagnostic pop  // ignored "-Wvolatile" 
+#endif // X86_UNIT_TESTING_ONLY
     		
-		#pragma GCC diagnostic pop  // ignored "-Wvolatile"  
-		#endif // not X86_UNIT_TESTING_ONLY	
+		 
     
         RCC->APBENR1 = RCC->APBENR1 | m_rcc_spi_clk;
         //m_spi->CR1 |= ((SPI_CR1_BIDIMODE | SPI_CR1_BIDIOE) | (SPI_CR1_MSTR | SPI_CR1_SSI) | SPI_CR1_SSM | SPI_CR1_BR_1);
