@@ -4,34 +4,114 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "run binary",
+            "label": "Cleanup files",
+            "type": "shell",
+            "command": "rm",
+            "args": [
+                "-rf",
+                "${workspaceRoot}/build/CMakeFiles/test_suite.dir/",
+                "${workspaceRoot}/coverage/*",
+            ]
+        },
+        {
+            "label": "CMake: Configure",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--no-warn-unused-cli",
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE",
+                "-DCMAKE_BUILD_TYPE:STRING=Debug",
+                "-DCMAKE_C_COMPILER:FILEPATH=/bin/x86_64-linux-gnu-gcc-10",
+                "-Bbuild",
+                "-G", "Ninja", ".",
+            ]
+        },
+        {
+            "label": "CMake: Clean",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build", "build",
+                "--config", "Debug",
+                "--target", "clean",
+                "--",
+            ]
+        },
+        {
+            "label": "CMake: Build",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build", "build",
+                "--config", "Debug",
+                "--target", "all", 
+                "--",
+            ]
+        },
+        {
+            "label": "Run",
             "type": "process",
-            "command": "${workspaceRoot}/build/test_suite"
+            "command": "${workspaceRoot}/build/test_suite",
+            "problemMatcher": []
         },
         {
-            "label": "create report",
+            "label": "Create HTML report",
             "type": "shell",
-            "command": "rm coverage/*; gcovr  -r . -e build -e 'tests/(.+)' --html --html-details -o coverage/index.html"
+            "command": "gcovr",
+            "args": [
+                "-r", "${workspaceRoot}",
+                "-e", "tests/catch.*$",
+                "-e", "build.*$",
+                "--exclude-unreachable-branches",
+                "--html-self-contained",
+                "--html-absolute-paths",
+                "--html",
+                "--html-details",
+                "-o", "${workspaceRoot}/coverage/index.html",
+            ]
         },
         {
-            "label": "convert html to pdf",
+            "label": "Create XML report",
             "type": "shell",
-            "command": "wkhtmltopdf ${workspaceRoot}/coverage/index.html ${workspaceRoot}/coverage/*.html ${workspaceRoot}/coverage/code.pdf"
+            "command": "gcovr",
+            "args": [
+                "-r", "${workspaceRoot}",
+                "-e", "tests/catch.*$",
+                "-e", "build.*$",
+                "--exclude-unreachable-branches",
+                "--xml",
+                "--xml-pretty",
+                "-o", "coverage/coverage.xml",
+            ]
         },
         {
-            "label": "delete html",
+            "label": "Open coverage report",
             "type": "shell",
-            "command": "rm ${workspaceRoot}/coverage/*.html"
+            "command": "firefox",
+            "args": [ "${workspaceRoot}/coverage/index.html" ]
         },
         {
-            "label": "open report",
-            "type": "shell",
-            "command": "firefox ${workspaceRoot}/coverage/code.pdf"
-        },
-        {
-            "label": "coverage report",
+            "label": "RunTests",
             "dependsOrder": "sequence",
-            "dependsOn": ["run binary", "create report", "convert html to pdf", "delete html", "open report"]
+            "dependsOn": [
+                "Cleanup files",
+                "CMake: Configure",
+                "CMake: Clean",
+                "CMake: Build",
+                "Run"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Complete All Tasks",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "RunTests",
+                "Create XML report",
+                "Create HTML report",
+                "Open coverage report"
+            ],
+            "problemMatcher": []
         }
     ]
 }

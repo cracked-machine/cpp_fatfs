@@ -25,11 +25,7 @@
 #define __DISKIO_PROTOCOL_USB_HPP__
 
 
-#if defined(X86_UNIT_TESTING_ONLY)
-	// This file should contain CMSIS bit definitions
-	#include <mock_cmsis.hpp>
-	#include <iostream>
-#else
+#ifndef X86_UNIT_TESTING_ONLY
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wvolatile"
 		#include <stm32g0xx_ll_gpio.h>
@@ -47,7 +43,7 @@ class DiskioProtocolUSB
 {
 public:
     // @brief Construct a new Driver Serial Interface object
-	DiskioProtocolUSB()
+	USED_API DiskioProtocolUSB()
 	{
 	}
 };

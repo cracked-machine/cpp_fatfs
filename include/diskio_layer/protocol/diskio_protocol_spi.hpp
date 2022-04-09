@@ -25,11 +25,7 @@
 #define __DISKIO_PROTOCOL_SPI_HPP__
 
 
-#if defined(X86_UNIT_TESTING_ONLY)
-	#include <iostream>
-    // This file should contain CMSIS bit definitions
-    #include <mock_cmsis.hpp>
-#else
+#ifndef X86_UNIT_TESTING_ONLY
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wvolatile"
 		#include <stm32g0xx_ll_gpio.h>
@@ -72,7 +68,7 @@ public:
 	:   m_spi(spi), m_sck_gpio(sck_gpio), m_mosi_gpio(mosi_gpio), 
 		m_miso_gpio(miso_gpio), m_cs_gpio(cs_gpio), m_rcc_spi_clk(rcc_spi_clk)
 	{}
-	bool setup_spi()
+	USED_API bool setup_spi()
 	{
 
 
@@ -146,9 +142,9 @@ public:
 	std::pair<GPIO_TypeDef*, uint32_t> sck_gpio() { return m_sck_gpio; }
     uint32_t rcc_spi_clk() { return m_rcc_spi_clk; }
 
-    void set_cs_low() { m_cs_gpio.first->BRR = m_cs_gpio.second; }
-    void set_cs_high() { m_cs_gpio.first->BSRR = m_cs_gpio.second; }
-    void toggle_cs() 
+    USED_API void set_cs_low() { m_cs_gpio.first->BRR = m_cs_gpio.second; }
+    USED_API void set_cs_high() { m_cs_gpio.first->BSRR = m_cs_gpio.second; }
+    USED_API void toggle_cs() 
     {   
         // read the ODR state of this GPIO port
         uint32_t odr_reg = m_cs_gpio.first->ODR;

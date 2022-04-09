@@ -53,7 +53,7 @@ namespace fatfs
 #if !FF_FS_READONLY
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::sync_window (FATFS* fs)
+USED_API FRESULT Driver<DISKIO_HW>::sync_window (FATFS* fs)
 {
 	FRESULT res = FR_OK;
 
@@ -73,7 +73,7 @@ FRESULT Driver<DISKIO_HW>::sync_window (FATFS* fs)
 #endif    
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::validate (FFOBJID* obj,	FATFS** rfs)
+USED_API FRESULT Driver<DISKIO_HW>::validate (FFOBJID* obj,	FATFS** rfs)
 {
 	FRESULT res = FR_INVALID_OBJECT;
 
@@ -100,7 +100,7 @@ FRESULT Driver<DISKIO_HW>::validate (FFOBJID* obj,	FATFS** rfs)
 }
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::mount_volume (const TCHAR** path, FATFS** rfs, BYTE mode)
+USED_API FRESULT Driver<DISKIO_HW>::mount_volume (const TCHAR** path, FATFS** rfs, BYTE mode)
 {
 	int vol;
 	DiskioHardwareBase::DSTATUS stat;
@@ -319,7 +319,7 @@ FRESULT Driver<DISKIO_HW>::mount_volume (const TCHAR** path, FATFS** rfs, BYTE m
 }
 
 template<typename DISKIO_HW>
-UINT Driver<DISKIO_HW>::check_fs (FATFS* fs, LBA_t sect)
+USED_API UINT Driver<DISKIO_HW>::check_fs (FATFS* fs, LBA_t sect)
 {
 	WORD w, sign;
 	BYTE b;
@@ -354,7 +354,7 @@ UINT Driver<DISKIO_HW>::check_fs (FATFS* fs, LBA_t sect)
 
 
 template<typename DISKIO_HW>
-UINT Driver<DISKIO_HW>::find_volume (FATFS* fs, UINT part)
+USED_API UINT Driver<DISKIO_HW>::find_volume (FATFS* fs, UINT part)
 {
 	UINT fmt, i;
 	DWORD mbr_pt[4];
@@ -400,7 +400,7 @@ UINT Driver<DISKIO_HW>::find_volume (FATFS* fs, UINT part)
 
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::move_window (FATFS* fs, LBA_t sect)
+USED_API FRESULT Driver<DISKIO_HW>::move_window (FATFS* fs, LBA_t sect)
 {
 	FRESULT res = FR_OK;
 
@@ -423,7 +423,7 @@ FRESULT Driver<DISKIO_HW>::move_window (FATFS* fs, LBA_t sect)
 #if !FF_FS_READONLY
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::sync_fs (FATFS* fs)
+USED_API FRESULT Driver<DISKIO_HW>::sync_fs (FATFS* fs)
 {
 	FRESULT res;
 
@@ -452,7 +452,7 @@ FRESULT Driver<DISKIO_HW>::sync_fs (FATFS* fs)
 #endif // !FF_FS_READONLY
 
 template<typename DISKIO_HW>
-DWORD Driver<DISKIO_HW>::get_fat (FFOBJID* obj, DWORD clst)
+USED_API DWORD Driver<DISKIO_HW>::get_fat (FFOBJID* obj, DWORD clst)
 {
 	UINT wc, bc;
 	DWORD val;
@@ -523,7 +523,7 @@ DWORD Driver<DISKIO_HW>::get_fat (FFOBJID* obj, DWORD clst)
 #if !FF_FS_READONLY
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::put_fat (FATFS* fs,	DWORD clst,	DWORD val)
+USED_API FRESULT Driver<DISKIO_HW>::put_fat (FATFS* fs,	DWORD clst,	DWORD val)
 {
 	UINT bc;
 	BYTE *p;
@@ -578,7 +578,7 @@ FRESULT Driver<DISKIO_HW>::put_fat (FATFS* fs,	DWORD clst,	DWORD val)
 #if FF_FS_EXFAT && !FF_FS_READONLY
 
 template<typename DISKIO_HW>
-DWORD Driver<DISKIO_HW>::find_bitmap (FATFS* fs, DWORD clst, DWORD ncl)
+USED_API DWORD Driver<DISKIO_HW>::find_bitmap (FATFS* fs, DWORD clst, DWORD ncl)
 {
 	BYTE bm, bv;
 	UINT i;
@@ -610,7 +610,7 @@ DWORD Driver<DISKIO_HW>::find_bitmap (FATFS* fs, DWORD clst, DWORD ncl)
 }
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::change_bitmap (FATFS* fs, DWORD clst, DWORD ncl, int bv)
+USED_API FRESULT Driver<DISKIO_HW>::change_bitmap (FATFS* fs, DWORD clst, DWORD ncl, int bv)
 {
 	BYTE bm;
 	UINT i;
@@ -637,7 +637,7 @@ FRESULT Driver<DISKIO_HW>::change_bitmap (FATFS* fs, DWORD clst, DWORD ncl, int 
 }
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::fill_first_frag (FFOBJID* obj)
+USED_API FRESULT Driver<DISKIO_HW>::fill_first_frag (FFOBJID* obj)
 {
 	FRESULT res;
 	DWORD cl, n;
@@ -654,7 +654,7 @@ FRESULT Driver<DISKIO_HW>::fill_first_frag (FFOBJID* obj)
 }
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::fill_last_frag (FFOBJID* obj, DWORD lcl, DWORD term)
+USED_API FRESULT Driver<DISKIO_HW>::fill_last_frag (FFOBJID* obj, DWORD lcl, DWORD term)
 {
 	FRESULT res;
 
@@ -674,7 +674,7 @@ FRESULT Driver<DISKIO_HW>::fill_last_frag (FFOBJID* obj, DWORD lcl, DWORD term)
 #if !FF_FS_READONLY
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::remove_chain (FFOBJID* obj,	DWORD clst,	DWORD pclst)
+USED_API FRESULT Driver<DISKIO_HW>::remove_chain (FFOBJID* obj,	DWORD clst,	DWORD pclst)
 {
 	FRESULT res = FR_OK;
 	DWORD nxt;
@@ -760,7 +760,7 @@ FRESULT Driver<DISKIO_HW>::remove_chain (FFOBJID* obj,	DWORD clst,	DWORD pclst)
 
 
 template<typename DISKIO_HW>
-DWORD Driver<DISKIO_HW>::create_chain (FFOBJID* obj, DWORD clst)
+USED_API DWORD Driver<DISKIO_HW>::create_chain (FFOBJID* obj, DWORD clst)
 {
 	DWORD cs, ncl, scl;
 	FRESULT res;
@@ -854,7 +854,7 @@ DWORD Driver<DISKIO_HW>::create_chain (FFOBJID* obj, DWORD clst)
 
 #if !FF_FS_READONLY
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::dir_clear (FATFS *fs, DWORD clst)
+USED_API FRESULT Driver<DISKIO_HW>::dir_clear (FATFS *fs, DWORD clst)
 {
 	LBA_t sect;
 	UINT n, szb;
@@ -885,7 +885,7 @@ FRESULT Driver<DISKIO_HW>::dir_clear (FATFS *fs, DWORD clst)
 
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::dir_sdi (DIR* dp, DWORD ofs)
+USED_API FRESULT Driver<DISKIO_HW>::dir_sdi (DIR* dp, DWORD ofs)
 {
 	DWORD csz, clst;
 	FATFS *fs = dp->obj.fs;
@@ -924,7 +924,7 @@ FRESULT Driver<DISKIO_HW>::dir_sdi (DIR* dp, DWORD ofs)
 }
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::dir_next (DIR* dp,	int stretch)
+USED_API FRESULT Driver<DISKIO_HW>::dir_next (DIR* dp,	int stretch)
 {
 	DWORD ofs, clst;
 	FATFS *fs = dp->obj.fs;
@@ -980,7 +980,7 @@ FRESULT Driver<DISKIO_HW>::dir_next (DIR* dp,	int stretch)
 #if !FF_FS_READONLY
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::dir_alloc (DIR* dp,	UINT n_ent)
+USED_API FRESULT Driver<DISKIO_HW>::dir_alloc (DIR* dp,	UINT n_ent)
 {
 	FRESULT res;
 	UINT n;
@@ -1017,7 +1017,7 @@ FRESULT Driver<DISKIO_HW>::dir_alloc (DIR* dp,	UINT n_ent)
 #if FF_FS_EXFAT
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::load_xdir (DIR* dp)
+USED_API FRESULT Driver<DISKIO_HW>::load_xdir (DIR* dp)
 {
 	FRESULT res;
 	UINT i, sz_ent;
@@ -1069,7 +1069,7 @@ FRESULT Driver<DISKIO_HW>::load_xdir (DIR* dp)
 #if !FF_FS_READONLY || FF_FS_RPATH != 0
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::load_obj_xdir (DIR* dp,	const FFOBJID* obj)
+USED_API FRESULT Driver<DISKIO_HW>::load_obj_xdir (DIR* dp,	const FFOBJID* obj)
 {
 	FRESULT res;
 
@@ -1093,7 +1093,7 @@ FRESULT Driver<DISKIO_HW>::load_obj_xdir (DIR* dp,	const FFOBJID* obj)
 #if !FF_FS_READONLY
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::store_xdir (DIR* dp)
+USED_API FRESULT Driver<DISKIO_HW>::store_xdir (DIR* dp)
 {
 	FRESULT res;
 	UINT nent;
@@ -1128,7 +1128,7 @@ FRESULT Driver<DISKIO_HW>::store_xdir (DIR* dp)
 #if FF_FS_MINIMIZE <= 1 || FF_FS_RPATH >= 2 || FF_USE_LABEL || FF_FS_EXFAT
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::dir_read (DIR* dp, int vol)
+USED_API FRESULT Driver<DISKIO_HW>::dir_read (DIR* dp, int vol)
 {
 	FRESULT res = FR_NO_FILE;
 	FATFS *fs = dp->obj.fs;
@@ -1199,7 +1199,7 @@ FRESULT Driver<DISKIO_HW>::dir_read (DIR* dp, int vol)
 
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::dir_find (DIR* dp)
+USED_API FRESULT Driver<DISKIO_HW>::dir_find (DIR* dp)
 {
 	FRESULT res;
 	FATFS *fs = dp->obj.fs;
@@ -1276,7 +1276,7 @@ FRESULT Driver<DISKIO_HW>::dir_find (DIR* dp)
 #if !FF_FS_READONLY
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::dir_register (DIR* dp)
+USED_API FRESULT Driver<DISKIO_HW>::dir_register (DIR* dp)
 {
 	FRESULT res;
 	FATFS *fs = dp->obj.fs;
@@ -1378,7 +1378,7 @@ FRESULT Driver<DISKIO_HW>::dir_register (DIR* dp)
 #if !FF_FS_READONLY && FF_FS_MINIMIZE == 0
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::dir_remove (DIR* dp)
+USED_API FRESULT Driver<DISKIO_HW>::dir_remove (DIR* dp)
 {
 	FRESULT res;
 	FATFS *fs = dp->obj.fs;
@@ -1416,7 +1416,7 @@ FRESULT Driver<DISKIO_HW>::dir_remove (DIR* dp)
 #endif /* !FF_FS_READONLY && FF_FS_MINIMIZE == 0 */
 
 template<typename DISKIO_HW>
-FRESULT Driver<DISKIO_HW>::follow_path (DIR* dp, const TCHAR* path)
+USED_API FRESULT Driver<DISKIO_HW>::follow_path (DIR* dp, const TCHAR* path)
 {
 	FRESULT res;
 	BYTE ns;

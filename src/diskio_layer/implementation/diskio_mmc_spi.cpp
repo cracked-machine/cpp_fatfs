@@ -24,10 +24,7 @@
 
 #include <timer_manager.hpp>
 
-#ifdef X86_UNIT_TESTING_ONLY
-	// This file should contain CMSIS bit definitions
-	#include <mock_cmsis.hpp>
-#else
+#ifndef X86_UNIT_TESTING_ONLY
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wvolatile" 
     #include <stm32g0xx_ll_gpio.h>

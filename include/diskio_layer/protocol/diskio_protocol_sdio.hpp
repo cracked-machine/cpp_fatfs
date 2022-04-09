@@ -25,11 +25,7 @@
 #define __DISKIO_PROTOCOL_SDIO_HPP__
 
 
-#if defined(X86_UNIT_TESTING_ONLY)
-	// This file should contain CMSIS bit definitions
-	#include <mock_cmsis.hpp>
-	#include <iostream>
-#else
+#ifndef X86_UNIT_TESTING_ONLY
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wvolatile"
 		#include <stm32g0xx_ll_gpio.h>
@@ -73,27 +69,27 @@ public:
 	bool setup_sdio()
 	{}
 
-	SDIO_TypeDef * get_sdio_handle() { return m_sdio; }
+	USED_API SDIO_TypeDef * get_sdio_handle() { return m_sdio; }
 
-	GPIO_TypeDef* get_cmd_port() { return m_cmd_port; }
-	uint16_t get_cmd_pin() { return m_cmd_pin; }
+	USED_API GPIO_TypeDef* get_cmd_port() { return m_cmd_port; }
+	USED_API uint16_t get_cmd_pin() { return m_cmd_pin; }
 
-	GPIO_TypeDef* get_clk_port() { return m_clk_port; }
-	uint16_t get_clk_pin() { return m_clk_pin; }	
+	USED_API GPIO_TypeDef* get_clk_port() { return m_clk_port; }
+	USED_API uint16_t get_clk_pin() { return m_clk_pin; }	
 
-	GPIO_TypeDef* get_d0_port() { return m_d0_port; }
-	uint16_t get_d0_pin() { return m_d0_pin; }
+	USED_API GPIO_TypeDef* get_d0_port() { return m_d0_port; }
+	USED_API uint16_t get_d0_pin() { return m_d0_pin; }
 
-	GPIO_TypeDef* get_d1_port() { return m_d1_port; }
-	uint16_t get_d1_pin() { return m_d1_pin; }	
+	USED_API GPIO_TypeDef* get_d1_port() { return m_d1_port; }
+	USED_API uint16_t get_d1_pin() { return m_d1_pin; }	
 
-	GPIO_TypeDef* get_d2_port() { return m_d2_port; }
-	uint16_t get_d2_pin() { return m_d2_pin; }
+	USED_API GPIO_TypeDef* get_d2_port() { return m_d2_port; }
+	USED_API uint16_t get_d2_pin() { return m_d2_pin; }
 
-	GPIO_TypeDef* get_d3_port() { return m_d3_port; }
-	uint16_t get_d3_pin() { return m_d3_pin; }	
+	USED_API GPIO_TypeDef* get_d3_port() { return m_d3_port; }
+	USED_API uint16_t get_d3_pin() { return m_d3_pin; }	
 
-    uint32_t get_rcc_spi_clk() { return m_rcc_spi_clk; }
+    USED_API uint32_t get_rcc_spi_clk() { return m_rcc_spi_clk; }
 private:
 	// @brief The SPI peripheral
 	SDIO_TypeDef *m_sdio;

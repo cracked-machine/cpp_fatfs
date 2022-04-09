@@ -1,2 +1,8 @@
 ignore:
   - "tests"
+
+coverage:
+  status:
+    patch:
+      default:
+        target: 0% 
