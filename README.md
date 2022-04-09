@@ -8,18 +8,8 @@ See [readme](tests) for information on unit testing/mocking.
 
 #### Adding this library to your STM32 Project
 
-There are two ways to add this library to your project's CMakeLists.txt:
-
-1. Implicitly include the [external.cmake](cmake/external.cmake):
+Add this repo ([cpp_fatfs](https://github.com/cracked-machine/cpp_fatfs.git)) to your project as a submodule and add the subdirectory:
 
 ```
-set(BUILD_NAME "MyProject")
-add_executable(${BUILD_NAME} "")
-include(cmake/external.cmake)
-```
-
-2. Explicitly add [embedded_utils](https://github.com/cracked-machine/embedded_utils.git) to your project as a ubmodule and add the subdirectory:
-
-```
-add_subdirectory(extern/embedded_utils)
+add_subdirectory(cpp_fatfs)
 ```
