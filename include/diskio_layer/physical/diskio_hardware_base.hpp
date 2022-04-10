@@ -47,8 +47,7 @@
 
 #include <spi_utils.hpp>
 
-// defines "USED_API __attribute__((__used__))"
-#include <gnuc_ext_defs.hpp>
+
 
 #define ENABLE_MMC_SPI
 namespace fatfs {

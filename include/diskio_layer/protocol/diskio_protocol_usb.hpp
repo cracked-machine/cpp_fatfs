@@ -43,7 +43,7 @@ class DiskioProtocolUSB
 {
 public:
     // @brief Construct a new Driver Serial Interface object
-	USED_API DiskioProtocolUSB()
+	DiskioProtocolUSB()
 	{
 	}
 };

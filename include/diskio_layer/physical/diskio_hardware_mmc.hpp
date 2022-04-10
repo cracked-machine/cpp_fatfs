@@ -140,7 +140,7 @@ private:
 /// @tparam DISKIO_PROTOCOL The type to initialize
 /// @param protocol_interface Reference to the object we intialize "DISKIO_PROTOCOL m_periph_interface" with
 template<typename DISKIO_PROTOCOL>
-USED_API DiskioHardwareMMC<DISKIO_PROTOCOL>::DiskioHardwareMMC(const DISKIO_PROTOCOL &protocol)
+DiskioHardwareMMC<DISKIO_PROTOCOL>::DiskioHardwareMMC(const DISKIO_PROTOCOL &protocol)
 :
     m_protocol(protocol)
 {

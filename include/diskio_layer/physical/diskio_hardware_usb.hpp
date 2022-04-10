@@ -104,7 +104,7 @@ private:
 /// @tparam DISKIO_PROTOCOL The type to initialize
 /// @param protocol Reference to the object we intialize "DISKIO_PROTOCOL m_periph" with
 template<typename DISKIO_PROTOCOL>
-USED_API DiskioHardwareUSB<DISKIO_PROTOCOL>::DiskioHardwareUSB(const DISKIO_PROTOCOL &protocol)
+DiskioHardwareUSB<DISKIO_PROTOCOL>::DiskioHardwareUSB(const DISKIO_PROTOCOL &protocol)
 :
     m_protocol(protocol)
 {

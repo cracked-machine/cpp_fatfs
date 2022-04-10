@@ -68,7 +68,7 @@ public:
 	:   m_spi(spi), m_sck_gpio(sck_gpio), m_mosi_gpio(mosi_gpio), 
 		m_miso_gpio(miso_gpio), m_cs_gpio(cs_gpio), m_rcc_spi_clk(rcc_spi_clk)
 	{}
-	USED_API bool setup_spi()
+	bool setup_spi()
 	{
 
 
@@ -142,9 +142,9 @@ public:
 	std::pair<GPIO_TypeDef*, uint32_t> sck_gpio() { return m_sck_gpio; }
     uint32_t rcc_spi_clk() { return m_rcc_spi_clk; }
 
-    USED_API void set_cs_low() { m_cs_gpio.first->BRR = m_cs_gpio.second; }
-    USED_API void set_cs_high() { m_cs_gpio.first->BSRR = m_cs_gpio.second; }
-    USED_API void toggle_cs() 
+    void set_cs_low() { m_cs_gpio.first->BRR = m_cs_gpio.second; }
+    void set_cs_high() { m_cs_gpio.first->BSRR = m_cs_gpio.second; }
+    void toggle_cs() 
     {   
         // read the ODR state of this GPIO port
         uint32_t odr_reg = m_cs_gpio.first->ODR;

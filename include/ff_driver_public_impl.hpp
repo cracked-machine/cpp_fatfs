@@ -53,7 +53,7 @@ namespace fatfs
 /* Mount/Unmount a Logical Drive                                         */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_mount (
+FRESULT Driver<DISKIO_HW>::f_mount (
 	FATFS* fs,			/* Pointer to the filesystem object to be registered (NULL:unmount)*/
 	const TCHAR* path,	/* Logical drive number to be mounted/unmounted */
 	BYTE opt			/* Mount option: 0=Do not mount (delayed mount), 1=Mount immediately */
@@ -112,7 +112,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_mount (
 /* Open or Create a File                                                 */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_open (
+FRESULT Driver<DISKIO_HW>::f_open (
 	FIL* fp,			/* Pointer to the blank file object */
 	const TCHAR* path,	/* Pointer to the file name */
 	BYTE mode			/* Access mode and open mode flags */
@@ -309,7 +309,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_open (
 /* Read File                                                             */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_read (
+FRESULT Driver<DISKIO_HW>::f_read (
 	FIL* fp, 	/* Open file to be read */
 	void* buff,	/* Data buffer to store the read data */
 	UINT btr,	/* Number of bytes to read */
@@ -409,7 +409,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_read (
 /* Write File                                                            */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_write (
+FRESULT Driver<DISKIO_HW>::f_write (
 	FIL* fp,			/* Open file to be written */
 	const void* buff,	/* Data to be written */
 	UINT btw,			/* Number of bytes to write */
@@ -530,7 +530,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_write (
 /* Synchronize the File                                                  */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_sync (
+FRESULT Driver<DISKIO_HW>::f_sync (
 	FIL* fp		/* Open file to be synced */
 )
 {
@@ -611,7 +611,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_sync (
 /* Close File                                                            */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_close (
+FRESULT Driver<DISKIO_HW>::f_close (
 	FIL* fp		/* Open file to be closed */
 )
 {
@@ -647,7 +647,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_close (
 /* Change Current Directory or Current Drive, Get Current Directory      */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_chdrive (
+FRESULT Driver<DISKIO_HW>::f_chdrive (
 	const TCHAR* path		/* Drive number to set */
 )
 {
@@ -664,7 +664,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_chdrive (
 
 
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_chdir (
+FRESULT Driver<DISKIO_HW>::f_chdir (
 	const TCHAR* path	/* Pointer to the directory path */
 )
 {
@@ -727,7 +727,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_chdir (
 
 #if FF_FS_RPATH >= 2
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_getcwd (
+FRESULT Driver<DISKIO_HW>::f_getcwd (
 	TCHAR* buff,	/* Pointer to the directory path */
 	UINT len		/* Size of buff in unit of TCHAR */
 )
@@ -827,7 +827,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_getcwd (
 /* Seek File Read/Write Pointer                                          */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_lseek (
+FRESULT Driver<DISKIO_HW>::f_lseek (
 	FIL* fp,		/* Pointer to the file object */
 	FSIZE_t ofs		/* File pointer from top of file */
 )
@@ -991,7 +991,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_lseek (
 /* Create a Directory Object                                             */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_opendir (
+FRESULT Driver<DISKIO_HW>::f_opendir (
 	DIR* dp,			/* Pointer to directory object to create */
 	const TCHAR* path	/* Pointer to the directory path */
 )
@@ -1057,7 +1057,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_opendir (
 /* Close Directory                                                       */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_closedir (
+FRESULT Driver<DISKIO_HW>::f_closedir (
 	DIR *dp		/* Pointer to the directory object to be closed */
 )
 {
@@ -1087,7 +1087,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_closedir (
 /* Read Directory Entries in Sequence                                    */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_readdir (
+FRESULT Driver<DISKIO_HW>::f_readdir (
 	DIR* dp,			/* Pointer to the open directory object */
 	FILINFO* fno		/* Pointer to file information to return */
 )
@@ -1123,7 +1123,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_readdir (
 /* Find Next File                                                        */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_findnext (
+FRESULT Driver<DISKIO_HW>::f_findnext (
 	DIR* dp,		/* Pointer to the open directory object */
 	FILINFO* fno	/* Pointer to the file information structure */
 )
@@ -1148,7 +1148,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_findnext (
 /* Find First File                                                       */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_findfirst (
+FRESULT Driver<DISKIO_HW>::f_findfirst (
 	DIR* dp,				/* Pointer to the blank directory object */
 	FILINFO* fno,			/* Pointer to the file information structure */
 	const TCHAR* path,		/* Pointer to the directory to open */
@@ -1175,7 +1175,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_findfirst (
 /* Get File Status                                                       */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_stat (
+FRESULT Driver<DISKIO_HW>::f_stat (
 	const TCHAR* path,	/* Pointer to the file path */
 	FILINFO* fno		/* Pointer to file information to return */
 )
@@ -1210,7 +1210,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_stat (
 /* Get Number of Free Clusters                                           */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_getfree (
+FRESULT Driver<DISKIO_HW>::f_getfree (
 	const TCHAR* path,	/* Logical drive number */
 	DWORD* nclst,		/* Pointer to a variable to return number of free clusters */
 	FATFS** fatfs		/* Pointer to return pointer to corresponding filesystem object */
@@ -1302,7 +1302,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_getfree (
 /* Truncate File                                                         */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_truncate (
+FRESULT Driver<DISKIO_HW>::f_truncate (
 	FIL* fp		/* Pointer to the file object */
 )
 {
@@ -1352,7 +1352,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_truncate (
 /* Delete a File/Directory                                               */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_unlink (
+FRESULT Driver<DISKIO_HW>::f_unlink (
 	const TCHAR* path		/* Pointer to the file or directory path */
 )
 {
@@ -1446,7 +1446,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_unlink (
 /* Create a Directory                                                    */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_mkdir (
+FRESULT Driver<DISKIO_HW>::f_mkdir (
 	const TCHAR* path		/* Pointer to the directory path */
 )
 {
@@ -1530,7 +1530,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_mkdir (
 /* Rename a File/Directory                                               */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_rename (
+FRESULT Driver<DISKIO_HW>::f_rename (
 	const TCHAR* path_old,	/* Pointer to the object name to be renamed */
 	const TCHAR* path_new	/* Pointer to the new name */
 )
@@ -1640,7 +1640,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_rename (
 /* Change Attribute                                                      */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_chmod (
+FRESULT Driver<DISKIO_HW>::f_chmod (
 	const TCHAR* path,	/* Pointer to the file path */
 	BYTE attr,			/* Attribute bits */
 	BYTE mask			/* Attribute mask to change */
@@ -1687,7 +1687,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_chmod (
 /* Change Timestamp                                                      */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_utime (
+FRESULT Driver<DISKIO_HW>::f_utime (
 	const TCHAR* path,	/* Pointer to the file/directory name */
 	const FILINFO* fno	/* Pointer to the timestamp to be set */
 )
@@ -1734,7 +1734,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_utime (
 /* Get Volume Label                                                      */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_getlabel (
+FRESULT Driver<DISKIO_HW>::f_getlabel (
 	const TCHAR* path,	/* Logical drive number */
 	TCHAR* label,		/* Buffer to store the volume label */
 	DWORD* vsn			/* Variable to store the volume serial number */
@@ -1831,7 +1831,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_getlabel (
 /* Set Volume Label                                                      */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_setlabel (
+FRESULT Driver<DISKIO_HW>::f_setlabel (
 	const TCHAR* label	/* Volume label to set with heading logical drive number */
 )
 {
@@ -1951,7 +1951,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_setlabel (
 /* Allocate a Contiguous Blocks to the File                              */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_expand (
+FRESULT Driver<DISKIO_HW>::f_expand (
 	FIL* fp,		/* Pointer to the file object */
 	FSIZE_t fsz,	/* File size to be expanded to */
 	BYTE opt		/* Operation mode 0:Find and prepare or 1:Find and allocate */
@@ -2041,7 +2041,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_expand (
 /* Forward Data to the Stream Directly                                   */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_forward (
+FRESULT Driver<DISKIO_HW>::f_forward (
 	FIL* fp, 						/* Pointer to the file object */
 	UINT (*func)(const BYTE*,UINT),	/* Pointer to the streaming function */
 	UINT btf,						/* Number of bytes to forward */
@@ -2119,7 +2119,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_forward (
 
 /* Create partitions on the physical drive in format of MBR or GPT */
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::create_partition (
+FRESULT Driver<DISKIO_HW>::create_partition (
 	BYTE drv,			/* Physical drive number */
 	const LBA_t plst[],	/* Partition list */
 	BYTE sys,			/* System ID (for only MBR, temp setting) */
@@ -2262,7 +2262,7 @@ USED_API FRESULT Driver<DISKIO_HW>::create_partition (
 
 
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_mkfs (
+FRESULT Driver<DISKIO_HW>::f_mkfs (
 	const TCHAR* path,		/* Logical drive number */
 	const MKFS_PARM* opt,	/* Format options */
 	void* work,				/* Pointer to working buffer (null: use heap memory) */
@@ -2763,7 +2763,7 @@ USED_API FRESULT Driver<DISKIO_HW>::f_mkfs (
 /* Create Partition Table on the Physical Drive                          */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_fdisk (
+FRESULT Driver<DISKIO_HW>::f_fdisk (
 	BYTE pdrv,			/* Physical drive number */
 	const LBA_t ptbl[],	/* Pointer to the size table for each partitions */
 	void* work			/* Pointer to the working buffer (null: use heap memory) */
@@ -3427,7 +3427,7 @@ int Driver<DISKIO_HW>::f_printf (
 /* Set Active Codepage for the Path Name                                 */
 /*-----------------------------------------------------------------------*/
 template<typename DISKIO_HW>
-USED_API FRESULT Driver<DISKIO_HW>::f_setcp (
+FRESULT Driver<DISKIO_HW>::f_setcp (
 	WORD cp		/* Value to be set as active code page */
 )
 {
