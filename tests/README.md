@@ -9,8 +9,4 @@ See `.vscode/tasks.json` for details on the individual toolchain commands.
 
 This project downloads the [embedded_utils](https://github.com/cracked-machine/embedded_utils/tree/main/tests) repo which contains a minimal STM32 mocking library.
 
-All files automatically include the `mock.hpp` header during unit testing build. See [CMakeFiles.txt](../CMakeLists.txt#L14):
-
-```
-add_definitions(-include ${CMAKE_SOURCE_DIR}/tests/mocks/mock.hpp) 
-```
+Building this library project directly will define `STM32G0B1xx` which means header files can include the mocked version of `stm32g0xx.h` header. The library will use the STM32 version of `stm32g0xx.h` when built as a submodule.
