@@ -13,3 +13,7 @@ Add this repo ([cpp_fatfs](https://github.com/cracked-machine/cpp_fatfs.git)) to
 ```
 add_subdirectory(cpp_fatfs)
 ```
+
+#### External Dependencies
+
+[Embedded Utils](https://github.com/cracked-machine/embedded_utils)
